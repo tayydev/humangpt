@@ -5,14 +5,13 @@
   import ChatInput from './lib/ChatInput.svelte';
   import WelcomeInput from './lib/WelcomeInput.svelte';
   import AnimatedNames from './lib/AnimatedNames.svelte';
-  import WaitingPopup from './lib/WaitingPopup.svelte';
   import {apiClient} from "./lib/api-client";
   import type {Session} from "humangpt-client"
   import { onMount } from 'svelte';
 
   let chats: Session[] = [];
   let currentChat: Session | null = null;
-  let showWaitingPopup = false;
+  let showWaitingMessage = false;
 
   // Helper function to deduplicate chats by UUID
   function deduplicateChats(newChat: Session, existingChats: Session[]): Session[] {
@@ -67,6 +66,8 @@
   async function handleMessageSubmit(event: CustomEvent<string>) {
     const messageContent = event.detail;
 
+    showWaitingMessage = false; //will stop
+
     const result = currentChat == null ? (await apiClient.submitSubmitPost(messageContent, "User:", false)).data
             : (await  apiClient.submitSubmitPost(messageContent, "UserFollowup", false, currentChat.uuid)).data
 
@@ -79,14 +80,14 @@
       updateUrlWithSession(result.uuid);
     }
 
-    // Show the waiting popup after 3 seconds
+    // Show the waiting message after 3 seconds
     setTimeout(() => {
-      showWaitingPopup = true;
-    }, 3000);
+      showWaitingMessage = true;
+    }, 1500);
   }
 
-  function closeWaitingPopup() {
-    showWaitingPopup = false;
+  function closeWaitingMessage() {
+    showWaitingMessage = false;
   }
 </script>
 
@@ -101,7 +102,11 @@
   <main class="chat-main">
     {#if currentChat}
       <ChatHeader title={currentChat.title || ""} />
-      <MessageList messages={currentChat.content || []} />
+      <MessageList
+        messages={currentChat.content || []}
+        showWaitingMessage={showWaitingMessage}
+        on:closeWaiting={() => closeWaitingMessage()}
+      />
       <ChatInput on:submit={handleMessageSubmit} />
     {:else}
       <div class="empty-state">
@@ -116,8 +121,6 @@
       </div>
     {/if}
   </main>
-
-  <WaitingPopup visible={showWaitingPopup} on:close={closeWaitingPopup} />
 </div>
 
 <style>

@@ -1,14 +1,32 @@
 <script lang="ts">
   import type { Message } from './types';
   import MessageComponent from './Message.svelte';
-
+  import InlineWaitingMessage from './InlineWaitingMessage.svelte';
+  import { createEventDispatcher } from 'svelte';
+  
   export let messages: Message[];
+  export let showWaitingMessage = false;
+  
+  const dispatch = createEventDispatcher();
+  
+  function handleCloseWaitingMessage() {
+    dispatch('closeWaiting');
+  }
 </script>
 
 <div class="messages-container">
-  {#each messages as message}
-    <MessageComponent {message} />
-  {/each}
+  <div class="messages-list">
+    {#each messages as message}
+      <MessageComponent {message} />
+    {/each}
+  </div>
+  
+  <div class="waiting-message-container">
+    <InlineWaitingMessage 
+      visible={showWaitingMessage} 
+      on:close={handleCloseWaitingMessage} 
+    />
+  </div>
 </div>
 
 <style>
@@ -18,6 +36,16 @@
     padding: 16px;
     display: flex;
     flex-direction: column;
+  }
+  
+  .messages-list {
+    display: flex;
+    flex-direction: column;
     gap: 24px;
+    margin-bottom: 16px;
+  }
+  
+  .waiting-message-container {
+    margin-top: auto;
   }
 </style>
