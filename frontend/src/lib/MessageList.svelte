@@ -3,7 +3,7 @@
   import MessageComponent from './Message.svelte';
   import InlineWaitingMessage from './InlineWaitingMessage.svelte';
   import LoadingIndicator from './LoadingIndicator.svelte';
-  import { createEventDispatcher } from 'svelte';
+  import { createEventDispatcher, onMount, afterUpdate } from 'svelte';
 
   export let messages: Message[];
   export let showWaitingMessage = false;
@@ -11,13 +11,29 @@
   export let isAwaitingResponse = false;
 
   const dispatch = createEventDispatcher();
+  let messagesContainer: HTMLElement;
+
+  // Scroll to bottom of messages container
+  function scrollToBottom() {
+    if (messagesContainer) {
+      messagesContainer.scrollTo({
+        top: messagesContainer.scrollHeight,
+        behavior: 'smooth'
+      });
+    }
+  }
+
+  // After any update, scroll to bottom
+  afterUpdate(() => {
+    scrollToBottom();
+  });
 
   function handleCloseWaitingMessage() {
     dispatch('closeWaiting');
   }
 </script>
 
-<div class="messages-container">
+<div class="messages-container" bind:this={messagesContainer}>
   <div class="messages-list">
     {#each messages as message}
       <MessageComponent {message} />

@@ -76,11 +76,15 @@
 
     // Immediately hide any existing awaiting response indicator
     isAwaitingResponse = false;
+    
+    // Scroll to bottom immediately when sending a message
+    scrollChatToBottom();
 
     // Show loading indicator after a 500ms delay
     let loadingTimeout = setTimeout(() => {
       isAwaitingResponse = true;
       console.log('Setting awaiting response to true');
+      scrollChatToBottom(); // Scroll when the awaiting response appears
     }, 250);
 
     try {
@@ -91,6 +95,9 @@
       currentChat = result;
       // Use deduplication helper to update chats list
       chats = deduplicateChats(result, chats);
+      
+      // Scroll to bottom when new messages arrive
+      scrollChatToBottom();
 
       // Update URL with new session UUID
       if (result.uuid) {
@@ -101,6 +108,7 @@
       setTimeout(() => {
         skipWaitingAnimation = false; // Reset to ensure animation plays when showing
         showWaitingMessage = true;
+        scrollChatToBottom(); // Scroll to bottom when popup appears
       }, 1500);
     } catch (error) {
       console.error('Error submitting message:', error);
@@ -111,6 +119,20 @@
 
   function closeWaitingMessage() {
     showWaitingMessage = false;
+  }
+  
+  // Helper function to force scroll to bottom
+  function scrollChatToBottom() {
+    // Use setTimeout to ensure it runs after DOM updates
+    setTimeout(() => {
+      const messagesContainer = document.querySelector('.messages-container');
+      if (messagesContainer) {
+        messagesContainer.scrollTo({
+          top: messagesContainer.scrollHeight,
+          behavior: 'smooth'
+        });
+      }
+    }, 100);
   }
 </script>
 
