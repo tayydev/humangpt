@@ -16,3 +16,4 @@ class Session(BaseModel):
     created_at: str = datetime.now().strftime("%Y-%m-%d")
     uuid: str
     content: list[Message] = []
+    is_reserved: bool = False
