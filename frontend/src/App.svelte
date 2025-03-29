@@ -13,6 +13,7 @@
   let currentChat: Session | null = null;
   let showWaitingMessage = false;
   let skipWaitingAnimation = false;
+  let isAwaitingResponse = false;
 
   // Helper function to deduplicate chats by UUID
   function deduplicateChats(newChat: Session, existingChats: Session[]): Session[] {
@@ -73,23 +74,36 @@
       showWaitingMessage = false;
     }
 
-    const result = currentChat == null ? (await apiClient.submitSubmitPost(messageContent, "User:", false)).data
-            : (await  apiClient.submitSubmitPost(messageContent, "UserFollowup", false, currentChat.uuid)).data
+    // Show loading indicator while waiting for response
+    isAwaitingResponse = true;
+    console.log('Setting awaiting response to true');
 
-    currentChat = result;
-    // Use deduplication helper to update chats list
-    chats = deduplicateChats(result, chats);
+    try {
+      const result = currentChat == null ?
+        (await apiClient.submitSubmitPost(messageContent, "User:", false)).data :
+        (await apiClient.submitSubmitPost(messageContent, "UserFollowup", false, currentChat.uuid)).data;
 
-    // Update URL with new session UUID
-    if (result.uuid) {
-      updateUrlWithSession(result.uuid);
+      currentChat = result;
+      // Use deduplication helper to update chats list
+      chats = deduplicateChats(result, chats);
+
+      // Update URL with new session UUID
+      if (result.uuid) {
+        updateUrlWithSession(result.uuid);
+      }
+
+      // Show the waiting message after 1.5 seconds with animation
+      setTimeout(() => {
+        skipWaitingAnimation = false; // Reset to ensure animation plays when showing
+        showWaitingMessage = true;
+      }, 1500);
+    } catch (error) {
+      console.error('Error submitting message:', error);
+    } finally {
+      // Hide loading indicator once response is received
+      console.log('Setting awaiting response to false');
+      // isAwaitingResponse = false;
     }
-
-    // Show the waiting message after 3 seconds with animation
-    setTimeout(() => {
-      skipWaitingAnimation = false; // Reset to ensure animation plays when showing
-      showWaitingMessage = true;
-    }, 3000);
   }
 
   function closeWaitingMessage() {
@@ -112,6 +126,7 @@
         messages={currentChat.content || []}
         showWaitingMessage={showWaitingMessage}
         skipWaitingAnimation={skipWaitingAnimation}
+        isAwaitingResponse={isAwaitingResponse}
         on:closeWaiting={() => closeWaitingMessage()}
       />
       <ChatInput on:submit={handleMessageSubmit} />

@@ -2,14 +2,16 @@
   import type { Message } from './types';
   import MessageComponent from './Message.svelte';
   import InlineWaitingMessage from './InlineWaitingMessage.svelte';
+  import LoadingIndicator from './LoadingIndicator.svelte';
   import { createEventDispatcher } from 'svelte';
-  
+
   export let messages: Message[];
   export let showWaitingMessage = false;
   export let skipWaitingAnimation = false;
-  
+  export let isAwaitingResponse = false;
+
   const dispatch = createEventDispatcher();
-  
+
   function handleCloseWaitingMessage() {
     dispatch('closeWaiting');
   }
@@ -21,12 +23,17 @@
       <MessageComponent {message} />
     {/each}
   </div>
-  
+
+  <!-- Loading indicator outside the messages list for better positioning -->
+  <div class="loading-indicator-container">
+    <LoadingIndicator visible={isAwaitingResponse} />
+  </div>
+
   <div class="waiting-message-container">
-    <InlineWaitingMessage 
+    <InlineWaitingMessage
       visible={showWaitingMessage}
       skipAnimation={skipWaitingAnimation}
-      on:close={handleCloseWaitingMessage} 
+      on:close={handleCloseWaitingMessage}
     />
   </div>
 </div>
@@ -39,14 +46,18 @@
     display: flex;
     flex-direction: column;
   }
-  
+
   .messages-list {
     display: flex;
     flex-direction: column;
     gap: 24px;
     margin-bottom: 16px;
   }
-  
+
+  .loading-indicator-container {
+    margin-bottom: 16px;
+  }
+
   .waiting-message-container {
     margin-top: auto;
   }
