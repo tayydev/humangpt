@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
   import type { Chat, Message } from './lib/types';
   import Sidebar from './lib/Sidebar.svelte';
   import ChatHeader from './lib/ChatHeader.svelte';
@@ -8,11 +7,6 @@
 
   let chats: Chat[] = [];
   let currentChat: Chat | null = null;
-
-  // Create initial chat
-  onMount(() => {
-    createNewChat();
-  });
 
   function createNewChat() {
     const newChat: Chat = {
@@ -30,10 +24,13 @@
   }
 
   function handleMessageSubmit(event: CustomEvent<string>) {
-    if (!currentChat) return;
-
     const messageContent = event.detail;
-
+    
+    if (!currentChat) {
+      // Create a new chat if none exists
+      createNewChat();
+    }
+    
     // Add user message
     const userMessage: Message = {
       id: crypto.randomUUID(),
@@ -58,22 +55,22 @@
       };
 
       currentChat.messages = [...currentChat.messages, assistantMessage];
-
+      
       // Update chat title based on first message if this is the first exchange
       if (currentChat.messages.length === 2 && currentChat.title === 'New Chat') {
         currentChat.title = userMessage.content.substring(0, 30) + (userMessage.content.length > 30 ? '...' : '');
       }
-
+      
       chats = [...chats];
     }, 1000);
   }
 </script>
 
 <div class="chat-container">
-  <Sidebar
-    {chats}
-    {currentChat}
-    on:newchat={createNewChat}
+  <Sidebar 
+    {chats} 
+    {currentChat} 
+    on:newchat={createNewChat} 
     on:select={selectChat}
   />
 
@@ -84,7 +81,13 @@
       <ChatInput on:submit={handleMessageSubmit} />
     {:else}
       <div class="empty-state">
-        <p>Select a chat or create a new one</p>
+        <div class="welcome-container">
+          <h1>HumanGPT</h1>
+          <p>How can I help you today?</p>
+          <div class="centered-input">
+            <ChatInput on:submit={handleMessageSubmit} />
+          </div>
+        </div>
       </div>
     {/if}
   </main>
@@ -112,5 +115,26 @@
     justify-content: center;
     height: 100%;
     color: #8e8ea0;
+  }
+
+  .welcome-container {
+    max-width: 600px;
+    text-align: center;
+  }
+
+  .welcome-container h1 {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+    color: #10a37f;
+  }
+
+  .welcome-container p {
+    font-size: 1.2rem;
+    margin-bottom: 2rem;
+    color: #c5c5d2;
+  }
+
+  .centered-input {
+    width: 100%;
   }
 </style>
