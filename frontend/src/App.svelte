@@ -59,7 +59,8 @@
   async function handleMessageSubmit(event: CustomEvent<string>) {
     const messageContent = event.detail;
 
-    const result: Session = (await apiClient.submitSubmitPost(messageContent, "User:", false)).data
+    const result = currentChat == null ? (await apiClient.submitSubmitPost(messageContent, "User:", false)).data
+            : (await  apiClient.submitSubmitPost(messageContent, "UserFollowup", false, currentChat.uuid)).data
 
     currentChat = result
     chats = [result, ...chats];
@@ -68,13 +69,13 @@
     if (result.uuid) {
       updateUrlWithSession(result.uuid);
     }
-    
+
     // Show the waiting popup after 3 seconds
     setTimeout(() => {
       showWaitingPopup = true;
     }, 3000);
   }
-  
+
   function closeWaitingPopup() {
     showWaitingPopup = false;
   }
@@ -105,7 +106,7 @@
       </div>
     {/if}
   </main>
-  
+
   <WaitingPopup visible={showWaitingPopup} on:close={closeWaitingPopup} />
 </div>
 
