@@ -1,23 +1,23 @@
 <script lang="ts">
-  import type { Chat } from './types';
+  import type { Session } from './types';
   import ChatItem from './ChatItem.svelte';
+  import { createEventDispatcher } from 'svelte';
+  
+  export let chats: Session[];
+  export let currentChat: Session | null;
+  
+  const dispatch = createEventDispatcher();
 
-  export let chats: Chat[];
-  export let currentChat: Chat | null;
-
-  function selectChat(chat: Chat) {
+  function selectChat(chat: Session) {
     dispatch('select', chat);
   }
-
-  import { createEventDispatcher } from 'svelte';
-  const dispatch = createEventDispatcher();
 </script>
 
 <div class="chat-list">
   {#each chats as chat}
     <ChatItem 
       {chat} 
-      isActive={currentChat && currentChat.id === chat.id}
+      isActive={currentChat && currentChat.uuid === chat.uuid}
       on:click={() => selectChat(chat)}
     />
   {/each}

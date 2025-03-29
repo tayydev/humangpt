@@ -12,7 +12,7 @@ class Message(BaseModel):
     is_answer: bool
 
 class Session(BaseModel):
-    title: str = "My First Chat"
+    title: str
     created_at: str = datetime.now().strftime("%Y-%m-%d")
     uuid: str
     content: list[Message] = []
