@@ -118,6 +118,7 @@
     justify-content: center;
     height: 100%;
     color: #8e8ea0;
+    padding-bottom: 15vh; /* Shift content up by adding padding to the bottom */
   }
 
   .welcome-container {
