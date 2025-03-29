@@ -14,6 +14,6 @@ class Message(BaseModel):
 class Session(BaseModel):
     title: str
     created_at: str = datetime.now().strftime("%Y-%m-%d")
+    created_timestamp: datetime = datetime.now()
     uuid: str
     content: list[Message] = []
-    is_reserved: bool = False
