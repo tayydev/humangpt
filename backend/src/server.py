@@ -32,7 +32,7 @@ async def get_session(uuid: str):
 
 
 @app.get("/unanswered_sessions")
-async def get_unanswered(answerer_id: str):
+async def get_unanswered(answerer_id: str) -> list[Session]:
     sessions = get_sessions()
     unanswered = []
     for session in sessions:
@@ -42,3 +42,7 @@ async def get_unanswered(answerer_id: str):
     unanswered = unanswered[:3]
     random.shuffle(unanswered)
     return unanswered
+
+@app.post("/guest_user")
+async def guest() -> UserPublic:
+    return create_temp_user()
