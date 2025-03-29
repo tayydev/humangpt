@@ -5,6 +5,9 @@ from data import *
 
 storage: dict[str, Session] = {}
 
+def get_only(uuid: str):
+    return storage[uuid]
+
 def get_or_create(uuid: Optional[str]):
     if uuid:
         return storage[uuid]
