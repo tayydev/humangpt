@@ -10,7 +10,12 @@
   let chats: Chat[] = [];
   let currentChat: Chat | null = null;
 
-  function createNewChat() {
+  function newChatSplashScreen() {
+    // Return to splash screen by setting currentChat to null
+    currentChat = null;
+  }
+
+  function initializeNewChat() {
     const newChat: Chat = {
       id: crypto.randomUUID(),
       title: 'New Chat',
@@ -27,12 +32,12 @@
 
   function handleMessageSubmit(event: CustomEvent<string>) {
     const messageContent = event.detail;
-    
+
     if (!currentChat) {
       // Create a new chat if none exists
-      createNewChat();
+      initializeNewChat();
     }
-    
+
     // Add user message
     const userMessage: Message = {
       id: crypto.randomUUID(),
@@ -57,22 +62,22 @@
       };
 
       currentChat.messages = [...currentChat.messages, assistantMessage];
-      
+
       // Update chat title based on first message if this is the first exchange
       if (currentChat.messages.length === 2 && currentChat.title === 'New Chat') {
         currentChat.title = userMessage.content.substring(0, 30) + (userMessage.content.length > 30 ? '...' : '');
       }
-      
+
       chats = [...chats];
     }, 1000);
   }
 </script>
 
 <div class="chat-container">
-  <Sidebar 
-    {chats} 
-    {currentChat} 
-    on:newchat={createNewChat} 
+  <Sidebar
+    {chats}
+    {currentChat}
+    on:newchat={newChatSplashScreen}
     on:select={selectChat}
   />
 
