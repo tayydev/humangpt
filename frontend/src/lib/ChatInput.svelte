@@ -27,7 +27,7 @@
       on:keydown={handleKeydown}
     ></textarea>
     <button type="submit" disabled={!message.trim()} aria-label="Send message">
-      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" xmlns="http://www.w3.org/2000/svg">
         <path d="M22 2L11 13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
         <path d="M22 2L15 22L11 13L2 9L22 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
@@ -73,11 +73,13 @@
     height: 36px;
     cursor: pointer;
     flex-shrink: 0;
-    display: flex;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
     transition: background-color 0.2s;
     padding: 0;
+    line-height: 1;
+    overflow: hidden;
   }
 
   button[type="submit"]:hover {
@@ -90,7 +92,11 @@
   }
 
   button svg {
-    width: 18px;
-    height: 18px;
+    width: 16px;
+    height: 16px;
+    position: relative;
+    top: 0;
+    left: 0;
+    transform: translate(0, 0); /* Adjust if needed for perfect centering */
   }
 </style>

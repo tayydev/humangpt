@@ -14,6 +14,14 @@
   let currentChat: Session | null = null;
   let showWaitingPopup = false;
 
+  // Helper function to deduplicate chats by UUID
+  function deduplicateChats(newChat: Session, existingChats: Session[]): Session[] {
+    // Remove any existing chat with the same UUID
+    const filteredChats = existingChats.filter(chat => chat.uuid !== newChat.uuid);
+    // Add the new/updated chat at the beginning
+    return [newChat, ...filteredChats];
+  }
+
   onMount(async () => {
     // Check if a session UUID is present in the URL
     const params = new URLSearchParams(window.location.search);
@@ -25,7 +33,7 @@
         const response = await apiClient.getSessionSessionUuidGet(sessionUuid);
         if (response.data) {
           currentChat = response.data;
-          chats = [response.data, ...chats];
+          chats = deduplicateChats(response.data, chats);
         }
       } catch (error) {
         console.error('Failed to load session:', error);
@@ -62,8 +70,9 @@
     const result = currentChat == null ? (await apiClient.submitSubmitPost(messageContent, "User:", false)).data
             : (await  apiClient.submitSubmitPost(messageContent, "UserFollowup", false, currentChat.uuid)).data
 
-    currentChat = result
-    chats = [result, ...chats];
+    currentChat = result;
+    // Use deduplication helper to update chats list
+    chats = deduplicateChats(result, chats);
 
     // Update URL with new session UUID
     if (result.uuid) {
