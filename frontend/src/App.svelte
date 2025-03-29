@@ -111,6 +111,7 @@
           <div class="centered-input">
             <WelcomeInput on:submit={handleMessageSubmit} />
           </div>
+          <p class="description-text">When you ask HumanGPT a question, a real human being will answer. Please be considerate of your fellow humans.</p>
         </div>
       </div>
     {/if}
@@ -165,6 +166,13 @@
     align-items: center;
     justify-content: center;
     gap: 0.2em;
+  }
+
+  .description-text {
+    font-size: 1rem;
+    margin-top: 2rem;
+    color: #8e8ea0;
+    text-align: center;
   }
 
   .centered-input {
