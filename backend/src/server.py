@@ -4,6 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from service import *
 from data import *
 from service import get_or_create
+import random
 
 app = FastAPI()
 
@@ -36,4 +37,7 @@ async def get_unanswered():
     for session in sessions:
         if not session.content[-1].is_answer:
             unanswered.append(session)
+    unanswered = sorted(unanswered, key=lambda s: s.created_timestamp)
+    unanswered = unanswered[:3]
+    random.shuffle(unanswered)
     return unanswered
