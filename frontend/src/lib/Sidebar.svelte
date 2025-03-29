@@ -1,18 +1,18 @@
 <script lang="ts">
-  import type { Chat } from './types';
   import ChatList from './ChatList.svelte';
 
-  export let chats: Chat[];
-  export let currentChat: Chat | null;
+  export let chats: Session[];
+  export let currentChat: Session | null;
 
   import { createEventDispatcher } from 'svelte';
+  import type {Session} from "humangpt-client";
   const dispatch = createEventDispatcher();
 
   function createNewChat() {
     dispatch('newchat');
   }
 
-  function handleSelectChat(event: CustomEvent<Chat>) {
+  function handleSelectChat(event: CustomEvent<Session>) {
     dispatch('select', event.detail);
   }
 </script>
@@ -22,9 +22,9 @@
     <h3>Chats</h3>
     <button class="new-chat-btn" on:click={createNewChat}>New Chat</button>
   </div>
-  <ChatList 
-    {chats} 
-    {currentChat} 
+  <ChatList
+    {chats}
+    {currentChat}
     on:select={handleSelectChat}
   />
 </aside>

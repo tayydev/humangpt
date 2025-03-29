@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from pydantic import BaseModel
 
 class QuestionStatus(BaseModel):
@@ -10,5 +12,7 @@ class Message(BaseModel):
     is_answer: bool
 
 class Session(BaseModel):
+    title: str = "My First Chat"
+    created_at: str = datetime.now().strftime("%Y-%m-%d")
     uuid: str
     content: list[Message] = []

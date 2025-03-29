@@ -1,7 +1,8 @@
 <script lang="ts">
-  import type { Chat } from './types';
 
-  export let chat: Chat;
+  import type {Session} from "humangpt-client";
+
+  export let chat: Session;
   export let isActive: boolean;
 
   function formatDate(date: Date): string {
@@ -9,13 +10,13 @@
   }
 </script>
 
-<div 
-  class="chat-item" 
+<div
+  class="chat-item"
   class:active={isActive}
   on:click
 >
   <div class="chat-title">{chat.title}</div>
-  <div class="chat-date">{formatDate(chat.createdAt)}</div>
+  <div class="chat-date">{chat.created_at}</div>
 </div>
 
 <style>

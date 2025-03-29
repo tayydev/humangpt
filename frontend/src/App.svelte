@@ -24,29 +24,19 @@
   async function handleMessageSubmit(event: CustomEvent<string>) {
     const messageContent = event.detail;
 
-    const result: Session = await apiClient.submitSubmitPost(messageContent, "User:", false)
+    const result: Session = (await apiClient.submitSubmitPost(messageContent, "User:", false)).data
 
-    // // Add user message
-    // const userMessage: Message = {
-    //   id: crypto.randomUUID(),
-    //   content: messageContent,
-    //   role: 'user',
-    //   timestamp: new Date()
-    // };
-    //
-    // // Add to current chat
-    // currentChat.messages = [...currentChat.messages, userMessage];
-    // chats = [...chats];
-      chats = [...chats];
+    currentChat = result
+    chats = [result, ...chats];
   }
 </script>
 
 <div class="chat-container">
   <Sidebar
-    {chats}
-    {currentChat}
-    on:newchat={newChatSplashScreen}
-    on:select={selectChat}
+          {chats}
+          {currentChat}
+          on:newchat={newChatSplashScreen}
+          on:select={selectChat}
   />
 
   <main class="chat-main">

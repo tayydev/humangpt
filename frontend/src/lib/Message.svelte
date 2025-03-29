@@ -4,8 +4,8 @@
   export let message: Message;
 </script>
 
-<div class="message {message.role}">
-  <div class="message-role">{message.role === 'user' ? 'You' : 'AI'}</div>
+<div class="message {message.is_answer ? 'user' : 'assistant' }">
+  <div class="message-role">{!message.is_answer  ? 'You' : 'AI'}</div>
   <div class="message-content">{message.content}</div>
 </div>
 
