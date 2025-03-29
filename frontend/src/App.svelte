@@ -74,9 +74,11 @@
       showWaitingMessage = false;
     }
 
-    // Show loading indicator while waiting for response
-    isAwaitingResponse = true;
-    console.log('Setting awaiting response to true');
+    // Show loading indicator after a 500ms delay
+    let loadingTimeout = setTimeout(() => {
+      isAwaitingResponse = true;
+      console.log('Setting awaiting response to true');
+    }, 500);
 
     try {
       const result = currentChat == null ?
@@ -100,9 +102,7 @@
     } catch (error) {
       console.error('Error submitting message:', error);
     } finally {
-      // Hide loading indicator once response is received
-      console.log('Setting awaiting response to false');
-      // isAwaitingResponse = false;
+      //do not put code here
     }
   }
 

@@ -22,10 +22,8 @@
     {#each messages as message}
       <MessageComponent {message} />
     {/each}
-  </div>
-
-  <!-- Loading indicator outside the messages list for better positioning -->
-  <div class="loading-indicator-container">
+    
+    <!-- Simple ASCII animation loading indicator -->
     <LoadingIndicator visible={isAwaitingResponse} />
   </div>
 
@@ -54,9 +52,7 @@
     margin-bottom: 16px;
   }
 
-  .loading-indicator-container {
-    margin-bottom: 16px;
-  }
+  /* Loading indicator is now included directly in messages-list */
 
   .waiting-message-container {
     margin-top: auto;
