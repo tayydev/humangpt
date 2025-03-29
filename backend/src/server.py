@@ -27,3 +27,13 @@ async def submit(msg: str, source: str, is_answer: bool, uuid: Optional[str] = N
 @app.get("/session/{uuid}")
 async def get_session(uuid : str):
     return get_only(uuid)
+
+
+@app.get("/unanswered_sessions")
+async def get_unanswered():
+    sessions = get_sessions()
+    unanswered = []
+    for session in sessions:
+        if not session.content[-1].is_answer:
+            unanswered.append(session)
+    return unanswered
