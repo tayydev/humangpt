@@ -12,6 +12,7 @@
   let chats: Session[] = [];
   let currentChat: Session | null = null;
   let showWaitingMessage = false;
+  let skipWaitingAnimation = false;
 
   // Helper function to deduplicate chats by UUID
   function deduplicateChats(newChat: Session, existingChats: Session[]): Session[] {
@@ -66,7 +67,11 @@
   async function handleMessageSubmit(event: CustomEvent<string>) {
     const messageContent = event.detail;
 
-    showWaitingMessage = false; //will stop
+    // Hide any existing waiting message without animation
+    if (showWaitingMessage) {
+      skipWaitingAnimation = true;
+      showWaitingMessage = false;
+    }
 
     const result = currentChat == null ? (await apiClient.submitSubmitPost(messageContent, "User:", false)).data
             : (await  apiClient.submitSubmitPost(messageContent, "UserFollowup", false, currentChat.uuid)).data
@@ -80,10 +85,11 @@
       updateUrlWithSession(result.uuid);
     }
 
-    // Show the waiting message after 3 seconds
+    // Show the waiting message after 3 seconds with animation
     setTimeout(() => {
+      skipWaitingAnimation = false; // Reset to ensure animation plays when showing
       showWaitingMessage = true;
-    }, 1500);
+    }, 3000);
   }
 
   function closeWaitingMessage() {
@@ -105,6 +111,7 @@
       <MessageList
         messages={currentChat.content || []}
         showWaitingMessage={showWaitingMessage}
+        skipWaitingAnimation={skipWaitingAnimation}
         on:closeWaiting={() => closeWaitingMessage()}
       />
       <ChatInput on:submit={handleMessageSubmit} />

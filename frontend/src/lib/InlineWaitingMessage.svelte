@@ -3,6 +3,7 @@
   import { createEventDispatcher } from 'svelte';
 
   export let visible = false;
+  export let skipAnimation = false;
 
   const dispatch = createEventDispatcher();
 
@@ -19,7 +20,9 @@
 </script>
 
 {#if visible}
-<div class="waiting-message" transition:fade={{ duration: 300 }}>
+<div class="waiting-message" class:no-animation={skipAnimation} 
+  in:fade={{duration: skipAnimation ? 0 : 300}} 
+  out:fade={{duration: skipAnimation ? 0 : 300}}>
   <div class="message-header">
     <h3>Hey there, while you wait for someone to answer your question, consider helping out a fellow human.</h3>
     <button class="close-button" on:click={closePopup} aria-label="Close">

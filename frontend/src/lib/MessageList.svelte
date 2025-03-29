@@ -6,6 +6,7 @@
   
   export let messages: Message[];
   export let showWaitingMessage = false;
+  export let skipWaitingAnimation = false;
   
   const dispatch = createEventDispatcher();
   
@@ -23,7 +24,8 @@
   
   <div class="waiting-message-container">
     <InlineWaitingMessage 
-      visible={showWaitingMessage} 
+      visible={showWaitingMessage}
+      skipAnimation={skipWaitingAnimation}
       on:close={handleCloseWaitingMessage} 
     />
   </div>
