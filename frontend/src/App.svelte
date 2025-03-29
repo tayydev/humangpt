@@ -5,12 +5,14 @@
   import ChatInput from './lib/ChatInput.svelte';
   import WelcomeInput from './lib/WelcomeInput.svelte';
   import AnimatedNames from './lib/AnimatedNames.svelte';
+  import WaitingPopup from './lib/WaitingPopup.svelte';
   import {apiClient} from "./lib/api-client";
   import type {Session} from "humangpt-client"
   import { onMount } from 'svelte';
 
   let chats: Session[] = [];
   let currentChat: Session | null = null;
+  let showWaitingPopup = false;
 
   onMount(async () => {
     // Check if a session UUID is present in the URL
@@ -66,6 +68,15 @@
     if (result.uuid) {
       updateUrlWithSession(result.uuid);
     }
+    
+    // Show the waiting popup after 3 seconds
+    setTimeout(() => {
+      showWaitingPopup = true;
+    }, 3000);
+  }
+  
+  function closeWaitingPopup() {
+    showWaitingPopup = false;
   }
 </script>
 
@@ -94,6 +105,8 @@
       </div>
     {/if}
   </main>
+  
+  <WaitingPopup visible={showWaitingPopup} on:close={closeWaitingPopup} />
 </div>
 
 <style>
