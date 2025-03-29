@@ -24,6 +24,6 @@ async def submit(msg: str, source: str, is_answer: bool, uuid: Optional[str] = N
     return write_session(session)
 
 
-@app.get("/session{uuid}")
+@app.get("/session/{uuid}")
 async def get_session(uuid : str):
     return get_only(uuid)
