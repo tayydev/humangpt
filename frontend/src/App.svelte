@@ -4,6 +4,7 @@
   import ChatHeader from './lib/ChatHeader.svelte';
   import MessageList from './lib/MessageList.svelte';
   import ChatInput from './lib/ChatInput.svelte';
+  import WelcomeInput from './lib/WelcomeInput.svelte';
   import AnimatedNames from './lib/AnimatedNames.svelte';
 
   let chats: Chat[] = [];
@@ -86,7 +87,7 @@
           <h1>HumanGPT</h1>
           <p class="welcome-text">How can <AnimatedNames /> help you today?</p>
           <div class="centered-input">
-            <ChatInput on:submit={handleMessageSubmit} />
+            <WelcomeInput on:submit={handleMessageSubmit} />
           </div>
         </div>
       </div>
@@ -119,8 +120,10 @@
   }
 
   .welcome-container {
-    max-width: 600px;
+    max-width: 780px;
+    width: 85%;
     text-align: center;
+    padding: 0 20px;
   }
 
   .welcome-container h1 {

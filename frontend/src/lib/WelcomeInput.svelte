@@ -18,12 +18,12 @@
   }
 </script>
 
-<div class="input-container">
+<div class="welcome-input-container">
   <form on:submit|preventDefault={handleSubmit}>
     <textarea 
       bind:value={message} 
       placeholder="Type your message here..." 
-      rows="2"
+      rows="1"
       on:keydown={handleKeydown}
     ></textarea>
     <button type="submit" disabled={!message.trim()} aria-label="Send message">
@@ -36,32 +36,36 @@
 </div>
 
 <style>
-  .input-container {
-    padding: 16px;
-    border-top: 1px solid #444654;
+  .welcome-input-container {
+    width: 100%;
+    padding: 0;
+    border-radius: 24px;
+    background-color: #40414f;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
   }
 
   form {
     display: flex;
     gap: 8px;
-    align-items: flex-end;
+    align-items: center;
+    padding: 6px 16px;
   }
 
   textarea {
     width: 100%;
-    padding: 12px;
-    border-radius: 8px;
-    background-color: #40414f;
+    padding: 10px 0;
+    background-color: transparent;
     border: none;
     resize: none;
     color: white;
     font-family: inherit;
-    min-height: 44px;
+    min-height: 24px;
+    font-size: 1rem;
+    line-height: 1.5;
   }
 
   textarea:focus {
     outline: none;
-    box-shadow: 0 0 0 2px #10a37f;
   }
 
   button[type="submit"] {
@@ -69,8 +73,8 @@
     color: white;
     border: none;
     border-radius: 999px;
-    width: 36px;
-    height: 36px;
+    width: 32px;
+    height: 32px;
     cursor: pointer;
     flex-shrink: 0;
     display: flex;
@@ -85,12 +89,12 @@
   }
 
   button[type="submit"]:disabled {
-    background-color: #2a2b32;
+    background-color: #1e1e2b;
     cursor: not-allowed;
   }
 
   button svg {
-    width: 18px;
-    height: 18px;
+    width: 16px;
+    height: 16px;
   }
 </style>
