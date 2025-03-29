@@ -1,0 +1,7 @@
+{
+    "name": "humangpt-monorepo",
+    "workspaces": [
+        "frontend",
+        "client"
+    ]
+}

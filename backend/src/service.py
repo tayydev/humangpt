@@ -13,3 +13,4 @@ def get_or_create(uuid: Optional[str]):
 
 def write_session(session: Session):
     storage[session.uuid] = session
+    return session

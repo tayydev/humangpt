@@ -10,7 +10,7 @@
     "check": "svelte-check --tsconfig ./tsconfig.json && tsc -p tsconfig.node.json"
   },
   "dependencies": {
-    "humangpt-client": "../client"
+    "humangpt-client": "workspace:*"
   },
   "devDependencies": {
     "@sveltejs/vite-plugin-svelte": "^3.1.2",

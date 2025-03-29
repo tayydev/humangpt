@@ -6,70 +6,38 @@
   import ChatInput from './lib/ChatInput.svelte';
   import WelcomeInput from './lib/WelcomeInput.svelte';
   import AnimatedNames from './lib/AnimatedNames.svelte';
+  import {apiClient} from "./lib/api-client";
+  import type {Session} from "humangpt-client"
 
-  let chats: Chat[] = [];
-  let currentChat: Chat | null = null;
+  let chats: Session[] = [];
+  let currentChat: Session | null = null;
 
   function newChatSplashScreen() {
     // Return to splash screen by setting currentChat to null
     currentChat = null;
   }
 
-  function initializeNewChat() {
-    const newChat: Chat = {
-      id: crypto.randomUUID(),
-      title: 'New Chat',
-      messages: [],
-      createdAt: new Date()
-    };
-    chats = [newChat, ...chats];
-    currentChat = newChat;
-  }
-
-  function selectChat(event: CustomEvent<Chat>) {
+  function selectChat(event: CustomEvent<Session>) {
     currentChat = event.detail;
   }
 
-  function handleMessageSubmit(event: CustomEvent<string>) {
+  async function handleMessageSubmit(event: CustomEvent<string>) {
     const messageContent = event.detail;
 
-    if (!currentChat) {
-      // Create a new chat if none exists
-      initializeNewChat();
-    }
+    const result: Session = await apiClient.submitSubmitPost(messageContent, "User:", false)
 
-    // Add user message
-    const userMessage: Message = {
-      id: crypto.randomUUID(),
-      content: messageContent,
-      role: 'user',
-      timestamp: new Date()
-    };
-
-    // Add to current chat
-    currentChat.messages = [...currentChat.messages, userMessage];
-    chats = [...chats];
-
-    // Simulate AI response after a short delay
-    setTimeout(() => {
-      if (!currentChat) return;
-
-      const assistantMessage: Message = {
-        id: crypto.randomUUID(),
-        content: "I'm an AI assistant. How can I help you today?",
-        role: 'assistant',
-        timestamp: new Date()
-      };
-
-      currentChat.messages = [...currentChat.messages, assistantMessage];
-
-      // Update chat title based on first message if this is the first exchange
-      if (currentChat.messages.length === 2 && currentChat.title === 'New Chat') {
-        currentChat.title = userMessage.content.substring(0, 30) + (userMessage.content.length > 30 ? '...' : '');
-      }
-
+    // // Add user message
+    // const userMessage: Message = {
+    //   id: crypto.randomUUID(),
+    //   content: messageContent,
+    //   role: 'user',
+    //   timestamp: new Date()
+    // };
+    //
+    // // Add to current chat
+    // currentChat.messages = [...currentChat.messages, userMessage];
+    // chats = [...chats];
       chats = [...chats];
-    }, 1000);
   }
 </script>
 
