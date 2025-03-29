@@ -14,7 +14,10 @@
   let currentChat: Session | null = null;
   let showWaitingMessage = false;
   let skipWaitingAnimation = false;
-  let isAwaitingResponse = false;
+  
+  // We'll stop using these global states and instead check per-chat status
+  let isAwaitingResponse = false; 
+  let canSendMessage = true;
 
   // Helper function to deduplicate chats by UUID
   function deduplicateChats(newChat: Session, existingChats: Session[]): Session[] {
@@ -38,6 +41,9 @@
         if (response.data) {
           currentChat = response.data;
           chats = deduplicateChats(response.data, chats);
+          
+          // Check message status upon loading a chat
+          updateCurrentChatStatus();
         }
       } catch (error) {
         console.error('Failed to load session:', error);
@@ -50,12 +56,19 @@
     currentChat = null;
     // Remove session from URL
     updateUrlWithSession(null);
+    
+    // Reset status when returning to splash screen
+    isAwaitingResponse = false;
+    canSendMessage = true;
   }
 
   function selectChat(event: CustomEvent<Session>) {
     currentChat = event.detail;
     // Update URL with selected session UUID
     updateUrlWithSession(event.detail.uuid);
+    
+    // Update status when switching to a different chat
+    updateCurrentChatStatus();
   }
 
   function updateUrlWithSession(sessionUuid: string | null) {
@@ -70,6 +83,12 @@
 
   async function handleMessageSubmit(event: CustomEvent<string>) {
     const messageContent = event.detail;
+    
+    // First check current chat status
+    updateCurrentChatStatus();
+    
+    // Don't allow sending if already waiting for a response in the current chat
+    if (!canSendMessage) return;
 
     // Hide any existing waiting message without animation
     if (showWaitingMessage) {
@@ -77,18 +96,12 @@
       showWaitingMessage = false;
     }
 
-    // Immediately hide any existing awaiting response indicator
-    isAwaitingResponse = false;
+    // Set status to awaiting response immediately for this chat
+    isAwaitingResponse = true;
+    canSendMessage = false;
 
     // Scroll to bottom immediately when sending a message
     scrollChatToBottom();
-
-    // Show loading indicator after a 500ms delay
-    let loadingTimeout = setTimeout(() => {
-      isAwaitingResponse = true;
-      console.log('Setting awaiting response to true');
-      scrollChatToBottom(); // Scroll when the awaiting response appears
-    }, 250);
 
     try {
       console.log("We have the user id", user)
@@ -100,6 +113,9 @@
       // Use deduplication helper to update chats list
       chats = deduplicateChats(result, chats);
 
+      // Check if last message needs a response and update UI accordingly
+      updateCurrentChatStatus();
+      
       // Scroll to bottom when new messages arrive
       scrollChatToBottom();
 
@@ -125,6 +141,44 @@
     showWaitingMessage = false;
   }
 
+  // Function to check if the last message in a chat is from the user (awaiting a response)
+  function checkChatStatus(chat: Session | null) {
+    if (!chat || !chat.content || chat.content.length === 0) {
+      return {
+        canSendMessage: true,
+        isAwaitingResponse: false
+      };
+    }
+    
+    // Get the last message
+    const lastMessage = chat.content[chat.content.length - 1];
+    
+    // If the last message is from the user (not an answer), we're awaiting a response
+    const canSend = lastMessage.is_answer !== false;
+    const isAwaiting = !canSend;
+    
+    return {
+      canSendMessage: canSend,
+      isAwaitingResponse: isAwaiting,
+      lastMessage
+    };
+  }
+  
+  // Check status for current chat and update UI state
+  function updateCurrentChatStatus() {
+    if (!currentChat) {
+      canSendMessage = true;
+      isAwaitingResponse = false;
+      return;
+    }
+    
+    const status = checkChatStatus(currentChat);
+    canSendMessage = status.canSendMessage;
+    isAwaitingResponse = status.isAwaitingResponse;
+    
+    console.log('Current chat status:', status);
+  }
+  
   // Helper function to force scroll to bottom
   function scrollChatToBottom() {
     // Use setTimeout to ensure it runs after DOM updates
@@ -158,7 +212,11 @@
         isAwaitingResponse={isAwaitingResponse}
         on:closeWaiting={() => closeWaitingMessage()}
       />
-      <ChatInput on:submit={handleMessageSubmit} />
+      <ChatInput 
+        on:submit={handleMessageSubmit}
+        isAwaitingResponse={isAwaitingResponse}
+        canSendMessage={canSendMessage}
+      />
     {:else}
       <div class="empty-state">
         <div class="welcome-container">

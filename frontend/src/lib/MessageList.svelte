@@ -2,13 +2,13 @@
   import type { Message } from './types';
   import MessageComponent from './Message.svelte';
   import InlineWaitingMessage from './InlineWaitingMessage.svelte';
-  import LoadingIndicator from './LoadingIndicator.svelte';
   import { createEventDispatcher, onMount, afterUpdate } from 'svelte';
 
   export let messages: Message[];
   export let showWaitingMessage = false;
   export let skipWaitingAnimation = false;
-  export let isAwaitingResponse = false;
+  // We no longer need isAwaitingResponse in this component
+  export let isAwaitingResponse = false; // Keeping for compatibility
 
   const dispatch = createEventDispatcher();
   let messagesContainer: HTMLElement;
@@ -38,9 +38,7 @@
     {#each messages as message}
       <MessageComponent {message} />
     {/each}
-    
-    <!-- Simple ASCII animation loading indicator -->
-    <LoadingIndicator visible={isAwaitingResponse} />
+    <!-- No longer using LoadingIndicator in the message list -->
   </div>
 
   <div class="waiting-message-container">

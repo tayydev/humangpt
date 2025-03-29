@@ -47,7 +47,8 @@
   });
 </script>
 
-{#if visible}
+<!-- No longer needed as we've moved this functionality to ChatInput -->
+{#if false}
 <div class="loading-indicator" in:fade={{ duration: 200 }} out:fade={{ duration: 50 }}>
   <span class="ascii-animation">{displayText}</span>
 </div>
