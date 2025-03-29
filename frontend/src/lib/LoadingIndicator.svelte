@@ -48,7 +48,7 @@
 </script>
 
 {#if visible}
-<div class="loading-indicator" in:fade={{ duration: 150, delay: 0 }} out:fade={{ duration: 150 }}>
+<div class="loading-indicator" in:fade={{ duration: 200 }} out:fade={{ duration: 50 }}>
   <span class="ascii-animation">{displayText}</span>
 </div>
 {/if}

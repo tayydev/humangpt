@@ -74,11 +74,14 @@
       showWaitingMessage = false;
     }
 
+    // Immediately hide any existing awaiting response indicator
+    isAwaitingResponse = false;
+
     // Show loading indicator after a 500ms delay
     let loadingTimeout = setTimeout(() => {
       isAwaitingResponse = true;
       console.log('Setting awaiting response to true');
-    }, 500);
+    }, 250);
 
     try {
       const result = currentChat == null ?
