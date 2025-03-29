@@ -44,7 +44,7 @@
   form {
     display: flex;
     gap: 8px;
-    align-items: flex-end;
+    align-items: center;
   }
 
   textarea {

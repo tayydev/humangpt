@@ -7,17 +7,51 @@
   import AnimatedNames from './lib/AnimatedNames.svelte';
   import {apiClient} from "./lib/api-client";
   import type {Session} from "humangpt-client"
+  import { onMount } from 'svelte';
 
   let chats: Session[] = [];
   let currentChat: Session | null = null;
 
+  onMount(async () => {
+    // Check if a session UUID is present in the URL
+    const params = new URLSearchParams(window.location.search);
+    const sessionUuid = params.get('session');
+
+    if (sessionUuid) {
+      try {
+        // Call the API to get the session by UUID
+        const response = await apiClient.getSessionSessionUuidGet(sessionUuid);
+        if (response.data) {
+          currentChat = response.data;
+          chats = [response.data, ...chats];
+        }
+      } catch (error) {
+        console.error('Failed to load session:', error);
+      }
+    }
+  });
+
   function newChatSplashScreen() {
     // Return to splash screen by setting currentChat to null
     currentChat = null;
+    // Remove session from URL
+    updateUrlWithSession(null);
   }
 
   function selectChat(event: CustomEvent<Session>) {
     currentChat = event.detail;
+    // Update URL with selected session UUID
+    updateUrlWithSession(event.detail.uuid);
+  }
+
+  function updateUrlWithSession(sessionUuid: string | null) {
+    const url = new URL(window.location.href);
+    if (sessionUuid) {
+      url.searchParams.set('session', sessionUuid);
+    } else {
+      url.searchParams.delete('session');
+    }
+    window.history.pushState({}, '', url.toString());
   }
 
   async function handleMessageSubmit(event: CustomEvent<string>) {
@@ -27,6 +61,11 @@
 
     currentChat = result
     chats = [result, ...chats];
+
+    // Update URL with new session UUID
+    if (result.uuid) {
+      updateUrlWithSession(result.uuid);
+    }
   }
 </script>
 
