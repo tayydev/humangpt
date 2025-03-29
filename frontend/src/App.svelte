@@ -1,5 +1,4 @@
 <script lang="ts">
-  import type { Chat, Message } from './lib/types';
   import Sidebar from './lib/Sidebar.svelte';
   import ChatHeader from './lib/ChatHeader.svelte';
   import MessageList from './lib/MessageList.svelte';
@@ -41,8 +40,8 @@
 
   <main class="chat-main">
     {#if currentChat}
-      <ChatHeader title={currentChat.title} />
-      <MessageList messages={currentChat.messages} />
+      <ChatHeader title={currentChat.title || ""} />
+      <MessageList messages={currentChat.content || []} />
       <ChatInput on:submit={handleMessageSubmit} />
     {:else}
       <div class="empty-state">
