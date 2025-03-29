@@ -6,9 +6,10 @@
   import WelcomeInput from './lib/WelcomeInput.svelte';
   import AnimatedNames from './lib/AnimatedNames.svelte';
   import {apiClient} from "./lib/api-client";
-  import type {Session} from "humangpt-client"
+  import type {Session, UserPublic} from "humangpt-client"
   import { onMount } from 'svelte';
 
+  let user: UserPublic | null = null;
   let chats: Session[] = [];
   let currentChat: Session | null = null;
   let showWaitingMessage = false;
@@ -27,6 +28,8 @@
     // Check if a session UUID is present in the URL
     const params = new URLSearchParams(window.location.search);
     const sessionUuid = params.get('session');
+
+    user = (await apiClient.guestGuestUserPost()).data
 
     if (sessionUuid) {
       try {
@@ -76,7 +79,7 @@
 
     // Immediately hide any existing awaiting response indicator
     isAwaitingResponse = false;
-    
+
     // Scroll to bottom immediately when sending a message
     scrollChatToBottom();
 
@@ -88,14 +91,15 @@
     }, 250);
 
     try {
+      console.log("We have the user id", user)
       const result = currentChat == null ?
-        (await apiClient.submitSubmitPost(messageContent, "User:", false)).data :
-        (await apiClient.submitSubmitPost(messageContent, "UserFollowup", false, currentChat.uuid)).data;
+        (await apiClient.submitSubmitPost(messageContent, user!.uuid, false)).data :
+        (await apiClient.submitSubmitPost(messageContent, user!.uuid, false, currentChat.uuid)).data;
 
       currentChat = result;
       // Use deduplication helper to update chats list
       chats = deduplicateChats(result, chats);
-      
+
       // Scroll to bottom when new messages arrive
       scrollChatToBottom();
 
@@ -120,7 +124,7 @@
   function closeWaitingMessage() {
     showWaitingMessage = false;
   }
-  
+
   // Helper function to force scroll to bottom
   function scrollChatToBottom() {
     // Use setTimeout to ensure it runs after DOM updates

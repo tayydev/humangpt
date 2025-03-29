@@ -16,11 +16,11 @@ def get_sessions():
         sessions.append(session)
     return sessions
 
-def get_or_create(uuid: Optional[str], title: str):
+def get_or_create(uuid: Optional[str], title: str, user_id: str):
     if uuid:
         return session_store[uuid]
     else:
-        return Session(uuid=str(uuid4()), title=title)
+        return Session(uuid=str(uuid4()), title=title, user_id=user_id)
 
 def write_session(session: Session):
     session_store[session.uuid] = session
