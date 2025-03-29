@@ -34,3 +34,6 @@ def create_temp_user() -> UserPublic:
         pfp_url="todo",
     )
     return user_store[guest_id].to_pub()
+
+def get_user_info(uuid: str) -> UserPublic:
+    return user_store[uuid].to_pub()

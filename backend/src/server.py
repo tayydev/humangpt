@@ -19,23 +19,24 @@ app.add_middleware(
 )
 
 @app.post("/submit")
-async def submit(msg: str, source: str, is_answer: bool, uuid: Optional[str] = None) -> Session:
+async def submit(msg: str, user_id: str, is_answer: bool, uuid: Optional[str] = None) -> Session:
     session = get_or_create(uuid, title=msg)
-    session.content.append(Message(name=source, content=msg, is_answer=is_answer))  # append new content
+    user = get_user_info(user_id)
+    session.content.append(Message(name=user.display_name, pfp_url=user.pfp_url, content=msg, is_answer=is_answer))  # append new content
     return write_session(session)
 
 
 @app.get("/session/{uuid}")
-async def get_session(uuid : str):
+async def get_session(uuid: str):
     return get_only(uuid)
 
 
 @app.get("/unanswered_sessions")
-async def get_unanswered():
+async def get_unanswered(answerer_id: str):
     sessions = get_sessions()
     unanswered = []
     for session in sessions:
-        if not session.content[-1].is_answer:
+        if not session.content[-1].is_answer and not session.user_id == answerer_id:
             unanswered.append(session)
     unanswered = sorted(unanswered, key=lambda s: s.created_timestamp)
     unanswered = unanswered[:3]

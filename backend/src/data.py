@@ -10,6 +10,7 @@ class QuestionStatus(BaseModel):
 class Message(BaseModel):
     user_id: str
     name: str
+    pfp_url: str
     content: str
     is_answer: bool
 
@@ -32,6 +33,7 @@ class UserSecret(BaseModel):
     pfp_url: str
     # todo: google secret
 
+    # returns everything that isn't secret about this person
     def to_pub(self):
         return UserPublic(
             uuid=self.uuid,
