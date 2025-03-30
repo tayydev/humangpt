@@ -1,11 +1,11 @@
 <script lang="ts">
   import { createEventDispatcher } from 'svelte';
   import type { UserPublic } from 'humangpt-client';
-  
+
   export let user: UserPublic;
-  
+
   const dispatch = createEventDispatcher();
-  
+
   function handleClick() {
     dispatch('profileClick');
   }
@@ -33,27 +33,27 @@
     height: 40px;
     min-width: 40px;
   }
-  
-  @media (max-width: 480px) {
+
+  @media (max-width: 768px) {
     .profile-button {
       padding: 6px;
       width: 36px;
       height: 36px;
       min-width: 36px;
     }
-    
+
     .profile-button svg {
       width: 22px;
       height: 22px;
     }
   }
-  
+
   .profile-button:hover {
     color: rgba(255, 255, 255, 1);
     background-color: rgba(255, 255, 255, 0.08);
     transform: scale(1.05);
   }
-  
+
   .profile-button:focus {
     outline: none;
     box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.2);

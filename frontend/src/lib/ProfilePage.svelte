@@ -117,22 +117,22 @@
     overflow: hidden;
     text-overflow: ellipsis;
   }
-  
-  @media (max-width: 380px) {
+
+  @media (max-width: 768px) {
     header {
       padding: 15px 10px;
     }
-    
+
     .back-button {
       margin-right: 8px;
       padding: 6px;
     }
-    
+
     .back-button svg {
       width: 20px;
       height: 20px;
     }
-    
+
     h1 {
       font-size: 16px;
     }
@@ -162,19 +162,19 @@
     flex-direction: column;
     justify-content: center;
   }
-  
-  @media (max-width: 480px) {
+
+  @media (max-width: 768px) {
     .profile-header {
       flex-direction: column;
       align-items: center;
       text-align: center;
       gap: 15px;
     }
-    
+
     .profile-info {
       align-items: center;
     }
-    
+
     .account-info {
       text-align: center;
     }

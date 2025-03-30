@@ -2,12 +2,12 @@
   import { createEventDispatcher } from 'svelte';
   import ProfileButton from './ProfileButton.svelte';
   import type { UserPublic } from 'humangpt-client';
-  
+
   export let title: string;
   export let user: UserPublic;
-  
+
   const dispatch = createEventDispatcher();
-  
+
   function handleProfileClick() {
     dispatch('profileClick');
   }
@@ -52,29 +52,29 @@
     max-width: 100%;
     font-size: 1.1rem;
   }
-  
+
   .header-actions {
     display: flex;
     align-items: center;
     min-width: 40px; /* Ensure space for profile button */
   }
-  
+
   @media (max-width: 768px) {
     .title-container {
       max-width: 50%;
     }
-    
+
     h2 {
       font-size: 1rem;
     }
-    
+
     .chat-header {
       padding-left: 48px;
       padding-right: 12px; /* Ensure profile button doesn't get cut off */
     }
   }
-  
-  @media (max-width: 480px) {
+
+  @media (max-width: 768px) {
     .title-container {
       max-width: 40%;
     }
