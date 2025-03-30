@@ -89,7 +89,6 @@
     width: 100%;
     background-color: #343541;
     display: flex;
-    justify-content: center;
     overflow-y: auto;
   }
   
@@ -99,18 +98,18 @@
     min-height: 100%;
     background-color: #343541;
     color: white;
-    max-width: 650px;
     width: 100%;
     padding: 0;
     box-sizing: border-box;
   }
   
   header {
-    padding: 20px 40px;
+    padding: 20px max(40px, 10%);
     display: flex;
     align-items: center;
     border-bottom: 1px solid rgba(255, 255, 255, 0.08);
     background-color: rgba(40, 40, 48, 0.3);
+    width: 100%;
   }
   
   .back-button {
@@ -138,9 +137,12 @@
   }
   
   .profile-content {
-    padding: 0 40px;
+    padding: 0 max(40px, 10%);
     overflow-y: auto;
     flex: 1;
+    max-width: 1200px;
+    margin: 0 auto;
+    width: 100%;
   }
   
   .profile-section {
