@@ -63,6 +63,7 @@
 
   async function loadUnansweredSessions() {
     try {
+      console.log("loading unanswered", user.uuid)
       const response = await apiClient.getUnansweredUnansweredSessionsGet(user.uuid);
       sessions = response.data;
     } catch (error) {
@@ -73,9 +74,15 @@
 
   let showSubmitSuccess = false;
 
-  onMount(async () => {
-    await loadUnansweredSessions();
-  });
+
+  let isLoaded = false;
+
+  // This reactive statement runs whenever requiredProperty changes
+  $: if (user && !isLoaded) {
+    loadUnansweredSessions().then(() => {
+      isLoaded = true;
+    });
+  }
 
   function handleKeydown(e: KeyboardEvent) {
     if (e.key === 'Enter' && !e.shiftKey) {

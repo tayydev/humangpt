@@ -32,7 +32,11 @@
     const params = new URLSearchParams(window.location.search);
     const sessionUuid = params.get('session');
 
-    user = (await apiClient.guestGuestUserPost()).data
+    if(!sessionUuid) {
+      //make a guest user
+      user = (await apiClient.guestGuestUserPost()).data
+    }
+
 
     if (sessionUuid) {
       try {
@@ -41,6 +45,10 @@
         if (response.data) {
           currentChat = response.data;
           chats = deduplicateChats(response.data, chats);
+
+          //we make a user and base it off of who owns the chat we just loaded
+          user = (await apiClient.getUserGetUserUuidGet(currentChat!.user_id)).data
+          console.log("our user is", user)
 
           // Check message status upon loading a chat
           updateCurrentChatStatus();
