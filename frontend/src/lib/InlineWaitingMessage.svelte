@@ -245,6 +245,12 @@
 {/if}
 
 <style>
+  /* Fix for iOS text scaling issues */
+  :global(.messages-container .waiting-message-container) {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+  
   .waiting-message {
     margin: 12px 0;
     background-color: #343541;
@@ -275,6 +281,10 @@
     display: flex;
     align-items: center;
     gap: 8px;
+    /* Prevent iOS from auto-scaling this text */
+    max-width: 100%;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
   }
 
   .back-button {
