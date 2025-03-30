@@ -44,7 +44,7 @@ def create_temp_user() -> UserPublic:
     user = UserSecret(
         uuid=guest_id,
         display_name = "guest_user_" + str(random.randint(10000000, 99999999)),
-        pfp_url="todo",
+        pfp_url="guest_url",
     )
     user_data = user.model_dump()
     get_users_collection().update_one(

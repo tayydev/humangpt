@@ -108,7 +108,7 @@
         Responding to question
       </h3>
     {:else}
-      <h3>Hey there, while you wait for someone to answer your question, consider helping out a fellow human.</h3>
+      <h3>Hey there! While you wait for someone to answer your question, consider helping out a fellow human.</h3>
     {/if}
 
     <button class="close-button" on:click={closePopup} aria-label="Close">
@@ -171,7 +171,7 @@
             <div class="question-card">
               <div class="question-header">
                 <div class="question-content">{session.title}</div>
-                <button class="help-button" on:click={() => selectSession(session)}>Help Answer</button>
+                <button class="help-button" on:click={() => selectSession(session)}>Answer</button>
               </div>
               <div class="question-metadata">
                 <span class="time-ago">{getMinutesAgo(session.updated_timestamp)} minutes ago</span>

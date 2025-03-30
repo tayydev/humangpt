@@ -5,6 +5,8 @@
   import ChatInput from './lib/ChatInput.svelte';
   import WelcomeInput from './lib/WelcomeInput.svelte';
   import AnimatedNames from './lib/AnimatedNames.svelte';
+  import ProfilePage from './lib/ProfilePage.svelte';
+  import ProfileButton from './lib/ProfileButton.svelte';
   import {apiClient} from "./lib/api-client";
   import type {Session, UserPublic} from "humangpt-client"
   import { onMount, onDestroy } from 'svelte';
@@ -14,6 +16,9 @@
   let currentChat: Session | null = null;
   let showWaitingMessage = false;
   let skipWaitingAnimation = false;
+  
+  // Navigation state
+  let showProfilePage = false;
 
   // We'll stop using these global states and instead check per-chat status
   let isAwaitingResponse = false;
@@ -31,9 +36,13 @@
   }
 
   onMount(async () => {
-    // Check if a session UUID is present in the URL
+    // Check URL parameters
     const params = new URLSearchParams(window.location.search);
     const sessionUuid = params.get('session');
+    const inProfilePage = params.get('profile') === 'true';
+    
+    // Set profile page state based on URL
+    showProfilePage = inProfilePage;
 
     if(!sessionUuid) {
       //make a guest user
@@ -61,8 +70,10 @@
             scrollChatToBottom(); // Scroll to bottom when popup appears
           }, 500);
 
-          // Start the refresh timer for the current chat
-          startRefreshTimer();
+          // Only start the refresh timer if we're not in profile view
+          if (!showProfilePage) {
+            startRefreshTimer();
+          }
         }
       } catch (error) {
         console.error('Failed to load session:', error);
@@ -80,8 +91,8 @@
   function newChatSplashScreen() {
     // Return to splash screen by setting currentChat to null
     currentChat = null;
-    // Remove session from URL
-    updateUrlWithSession(null);
+    // Update URL to remove session but preserve profile state
+    updateUrlWithSession(null, showProfilePage);
 
     // Reset status when returning to splash screen
     isAwaitingResponse = false;
@@ -93,8 +104,8 @@
   function selectChat(event: CustomEvent<Session>) {
     didCloseAwaiting = false;
     currentChat = event.detail;
-    // Update URL with selected session UUID
-    updateUrlWithSession(event.detail.uuid);
+    // Update URL with selected session UUID, preserving profile state
+    updateUrlWithSession(event.detail.uuid, showProfilePage);
 
     // Update status when switching to a different chat
     updateCurrentChatStatus();
@@ -143,13 +154,23 @@
     }
   }
 
-  function updateUrlWithSession(sessionUuid: string | null) {
+  function updateUrlWithSession(sessionUuid: string | null, inProfilePage: boolean = false) {
     const url = new URL(window.location.href);
+    
+    // Update session parameter
     if (sessionUuid) {
       url.searchParams.set('session', sessionUuid);
     } else {
       url.searchParams.delete('session');
     }
+    
+    // Update profile page parameter
+    if (inProfilePage) {
+      url.searchParams.set('profile', 'true');
+    } else {
+      url.searchParams.delete('profile');
+    }
+    
     window.history.pushState({}, '', url.toString());
   }
 
@@ -190,9 +211,9 @@
       // Scroll to bottom when new messages arrive
       scrollChatToBottom();
 
-      // Update URL with new session UUID
+      // Update URL with new session UUID, preserving profile state
       if (result.uuid) {
-        updateUrlWithSession(result.uuid);
+        updateUrlWithSession(result.uuid, showProfilePage);
       }
 
       // Start or restart the refresh timer for the current chat
@@ -267,44 +288,76 @@
       }
     }, 100);
   }
+  
+  function navigateToProfile() {
+    showProfilePage = true;
+    // Stop refreshing when navigating away from chat
+    stopRefreshTimer();
+    // Update URL to reflect profile page state
+    updateUrlWithSession(currentChat?.uuid || null, true);
+  }
+  
+  function navigateToChat() {
+    showProfilePage = false;
+    // Restart refreshing when returning to chat
+    if (currentChat) {
+      startRefreshTimer();
+    }
+    // Update URL to reflect chat page state
+    updateUrlWithSession(currentChat?.uuid || null, false);
+  }
 </script>
 
-<div class="chat-container">
-  <Sidebar
-          {chats}
-          {currentChat}
-          on:newchat={newChatSplashScreen}
-          on:select={selectChat}
-  />
-
-  <main class="chat-main">
-    {#if currentChat}
-      <ChatHeader title={currentChat.title || ""} />
-      <MessageList
-        messages={currentChat.content || []}
-        showWaitingMessage={showWaitingMessage && !didCloseAwaiting}
-        skipWaitingAnimation={skipWaitingAnimation}
-        user={user}
-        on:closeWaiting={() => closeWaitingMessage()}
-      />
-      <ChatInput
-        on:submit={handleMessageSubmit}
-        isAwaitingResponse={isAwaitingResponse}
-      />
-    {:else}
-      <div class="empty-state">
-        <div class="welcome-container">
-          <h1>HumanGPT</h1>
-          <p class="welcome-text">How can <AnimatedNames /> help you today?</p>
-          <div class="centered-input">
-            <WelcomeInput on:submit={handleMessageSubmit} />
+{#if showProfilePage}
+  <ProfilePage {user} on:back={navigateToChat} />
+{:else}
+  <div class="chat-container">
+    <Sidebar
+            {chats}
+            {currentChat}
+            on:newchat={newChatSplashScreen}
+            on:select={selectChat}
+    />
+  
+    <main class="chat-main">
+      {#if currentChat}
+        <ChatHeader 
+          title={currentChat.title || ""} 
+          {user} 
+          on:profileClick={navigateToProfile} 
+        />
+        <MessageList
+          messages={currentChat.content || []}
+          showWaitingMessage={showWaitingMessage && !didCloseAwaiting}
+          skipWaitingAnimation={skipWaitingAnimation}
+          user={user}
+          on:closeWaiting={() => closeWaitingMessage()}
+        />
+        <ChatInput
+          on:submit={handleMessageSubmit}
+          isAwaitingResponse={isAwaitingResponse}
+        />
+      {:else}
+        <div class="profile-header-container">
+          <div class="profile-spacer"></div>
+          <div class="profile-button-container">
+            <ProfileButton {user} on:profileClick={navigateToProfile} />
           </div>
-          <p class="description-text">When you ask HumanGPT a question, a real human being will answer. Please be considerate of your fellow meat sacks.</p>
         </div>
-      </div>
-    {/if}
-  </main>
-</div>
+        <div class="empty-state">
+          <div class="welcome-container">
+            <h1>HumanGPT</h1>
+            <p class="welcome-text">How can <AnimatedNames /> help you today?</p>
+            <div class="centered-input">
+              <WelcomeInput on:submit={handleMessageSubmit} />
+            </div>
+            <p class="description-text">When you ask HumanGPT a question, a real human being will answer. Please be considerate of your fellow meat sacks.</p>
+          </div>
+        </div>
+      {/if}
+    </main>
+  </div>
+{/if}
 
 <style>
   .chat-container {
@@ -320,6 +373,24 @@
     flex-direction: column;
     background-color: #343541;
     color: white;
+  }
+
+  .profile-header-container {
+    display: flex;
+    justify-content: flex-end;
+    padding: 8px 16px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    height: 56px;
+    box-sizing: border-box;
+  }
+  
+  .profile-spacer {
+    flex: 1;
+  }
+  
+  .profile-button-container {
+    display: flex;
+    justify-content: flex-end;
   }
 
   .empty-state {

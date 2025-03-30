@@ -36,12 +36,14 @@
     color: white;
     display: flex;
     flex-direction: column;
-    border-right: 1px solid #444654;
+    border-right: 1px solid rgba(255, 255, 255, 0.08);
   }
 
   .sidebar-header {
-    padding: 16px;
-    border-bottom: 1px solid #444654;
+    padding: 15px 16px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    height: 56px;
+    box-sizing: border-box;
     display: flex;
     justify-content: space-between;
     align-items: center;
