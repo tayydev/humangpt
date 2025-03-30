@@ -17,7 +17,7 @@
 
   // We'll stop using these global states and instead check per-chat status
   let isAwaitingResponse = false;
-  let canSendMessage = true;
+  let didCloseAwaiting = false;
 
   // Timer for auto-refreshing current chat
   let refreshTimer: number | null = null;
@@ -85,13 +85,13 @@
 
     // Reset status when returning to splash screen
     isAwaitingResponse = false;
-    canSendMessage = true;
 
     // Stop the refresh timer when returning to splash screen
     stopRefreshTimer();
   }
 
   function selectChat(event: CustomEvent<Session>) {
+    didCloseAwaiting = false;
     currentChat = event.detail;
     // Update URL with selected session UUID
     updateUrlWithSession(event.detail.uuid);
@@ -160,7 +160,7 @@
     updateCurrentChatStatus();
 
     // Don't allow sending if already waiting for a response in the current chat
-    if (!canSendMessage) return;
+    if (isAwaitingResponse) return;
 
     // Hide any existing waiting message without animation
     if (showWaitingMessage) {
@@ -170,7 +170,6 @@
 
     // Set status to awaiting response immediately for this chat
     isAwaitingResponse = true;
-    canSendMessage = false;
 
     // Scroll to bottom immediately when sending a message
     scrollChatToBottom();
@@ -213,7 +212,7 @@
   }
 
   function closeWaitingMessage() {
-    showWaitingMessage = false;
+    didCloseAwaiting = true;
   }
 
   // Function to check if the last message in a chat is from the user (awaiting a response)
@@ -244,14 +243,13 @@
   // Check status for current chat and update UI state
   function updateCurrentChatStatus() {
     if (!currentChat) {
-      canSendMessage = true;
       isAwaitingResponse = false;
       return;
     }
 
     const status = checkChatStatus(currentChat);
-    canSendMessage = status.canSendMessage;
     isAwaitingResponse = status.isAwaitingResponse;
+    if(!isAwaitingResponse) didCloseAwaiting = false
 
     console.log('Current chat status:', status);
   }
@@ -284,16 +282,14 @@
       <ChatHeader title={currentChat.title || ""} />
       <MessageList
         messages={currentChat.content || []}
-        showWaitingMessage={showWaitingMessage}
+        showWaitingMessage={showWaitingMessage && !didCloseAwaiting}
         skipWaitingAnimation={skipWaitingAnimation}
-        isAwaitingResponse={isAwaitingResponse}
         user={user}
         on:closeWaiting={() => closeWaitingMessage()}
       />
       <ChatInput
         on:submit={handleMessageSubmit}
         isAwaitingResponse={isAwaitingResponse}
-        canSendMessage={canSendMessage}
       />
     {:else}
       <div class="empty-state">
