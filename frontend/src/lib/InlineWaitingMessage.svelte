@@ -260,6 +260,16 @@
     width: 95%; /* Slightly narrower to prevent scrollbar */
     max-width: 900px;
     align-self: center;
+    -webkit-box-sizing: border-box;
+    box-sizing: border-box;
+  }
+  
+  /* iOS-specific adjustments */
+  @supports (-webkit-touch-callout: none) {
+    .waiting-message {
+      max-width: calc(100% - 10px);
+      width: 92%;
+    }
   }
 
   .message-header {
@@ -329,6 +339,15 @@
     overflow: hidden;
     width: 100%;
     box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+  }
+  
+  /* iOS-specific adjustments */
+  @supports (-webkit-touch-callout: none) {
+    .content-container {
+      overflow-x: hidden;
+      max-width: 100%;
+    }
   }
 
   .questions-container {

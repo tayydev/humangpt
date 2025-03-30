@@ -62,6 +62,17 @@
     padding: 16px;
     display: flex;
     flex-direction: column;
+    max-width: 100%;
+    -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+  }
+  
+  /* iOS-specific adjustments */
+  @supports (-webkit-touch-callout: none) {
+    .messages-container {
+      overflow-x: hidden;
+      -webkit-box-sizing: border-box;
+      box-sizing: border-box;
+    }
   }
 
   .messages-list {
@@ -78,5 +89,20 @@
     display: flex;
     justify-content: center;
     width: 100%;
+    position: relative;
+    /* Fix iOS width issues */
+    max-width: 100vw;
+    overflow-x: hidden;
+    -webkit-box-sizing: border-box;
+    box-sizing: border-box;
+  }
+  
+  /* iOS-specific adjustments */
+  @supports (-webkit-touch-callout: none) {
+    .waiting-message-container {
+      width: 95vw; /* Slightly narrower on iOS */
+      margin-left: auto;
+      margin-right: auto;
+    }
   }
 </style>
