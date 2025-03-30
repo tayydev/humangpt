@@ -19,11 +19,28 @@
   }
 
   function getMinutesAgo(isoString: string): number {
+    // Parse the UTC ISO string
     const time = new Date(isoString);
+
+    // Get current time in UTC
     const now = new Date();
-    const diffMs = now.getTime() - time.getTime();
+    const nowUtc = new Date(
+            now.getUTCFullYear(),
+            now.getUTCMonth(),
+            now.getUTCDate(),
+            now.getUTCHours(),
+            now.getUTCMinutes(),
+            now.getUTCSeconds(),
+            now.getUTCMilliseconds()
+    );
+
+    // Calculate difference in milliseconds
+    const diffMs = nowUtc.getTime() - time.getTime();
+
+    // Convert to minutes
     return Math.floor(diffMs / 60000);
   }
+
 
   function selectSession(session: Session) {
     selectedSession = session;
