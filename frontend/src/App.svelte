@@ -332,7 +332,9 @@
 </script>
 
 {#if showProfilePage}
-  <ProfilePage {user} on:back={navigateToChat} />
+  <div class="profile-wrapper">
+    <ProfilePage {user} on:back={navigateToChat} />
+  </div>
 {:else}
   <div class="chat-container">
     <button class="menu-toggle" on:click={toggleSidebar} aria-label="Toggle sidebar">
@@ -472,6 +474,14 @@
     }
   }
 
+  .profile-wrapper {
+    width: 100vw;
+    max-width: 100%;
+    overflow-x: hidden;
+    position: relative;
+    height: 100vh;
+  }
+  
   .profile-header-container {
     display: flex;
     justify-content: flex-end;

@@ -65,6 +65,9 @@
     background-color: #343541;
     display: flex;
     overflow-y: auto;
+    overflow-x: hidden; /* Prevent horizontal scrolling */
+    position: relative;
+    max-width: 100vw;
   }
 
   .profile-page {
@@ -74,8 +77,10 @@
     background-color: #343541;
     color: white;
     width: 100%;
+    max-width: 100vw;
     padding: 0;
     box-sizing: border-box;
+    overflow-x: hidden;
   }
 
   header {
@@ -85,8 +90,10 @@
     border-bottom: 1px solid rgba(255, 255, 255, 0.08);
     background-color: rgba(40, 40, 48, 0.3);
     width: 100%;
+    max-width: 100%;
     height: 56px;
     box-sizing: border-box;
+    position: relative;
   }
 
   .back-button {
@@ -129,17 +136,22 @@
     }
   }
 
-  @media (max-width: 786px) {
+  @media (max-width: 768px) {
     .profile-section,
     .section {
       padding-left: 16px;
       padding-right: 16px;
+      box-sizing: border-box;
+      width: 100%;
+      max-width: 100%;
     }
 
     .divider {
       margin-left: 16px;
       margin-right: 16px;
       width: calc(100% - 32px);
+      box-sizing: border-box;
+      max-width: 100%;
     }
 
     .back-button svg {
@@ -155,11 +167,12 @@
   .profile-content {
     padding: 0;
     overflow-y: auto;
+    overflow-x: hidden;
     flex: 1;
-    max-width: 1200px;
-    margin: 0 auto;
+    max-width: 100%;
     width: 100%;
     box-sizing: border-box;
+    margin: 0 auto;
   }
 
   .profile-section {
@@ -286,7 +299,7 @@
     border-radius: 1px;
   }
 
-  @media (max-width: 786px) {
+  @media (max-width: 768px) {
     h3 {
       font-size: 16px;
     }
@@ -301,7 +314,7 @@
     text-align: left;
   }
 
-  @media (max-width: 786px) {
+  @media (max-width: 768px) {
     .privacy-notice {
       font-size: 13px;
     }
