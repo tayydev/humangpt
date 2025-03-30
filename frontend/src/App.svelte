@@ -5,6 +5,7 @@
   import ChatInput from './lib/ChatInput.svelte';
   import WelcomeInput from './lib/WelcomeInput.svelte';
   import AnimatedNames from './lib/AnimatedNames.svelte';
+  import ProfilePage from './lib/ProfilePage.svelte';
   import {apiClient} from "./lib/api-client";
   import type {Session, UserPublic} from "humangpt-client"
   import { onMount, onDestroy } from 'svelte';
@@ -14,6 +15,9 @@
   let currentChat: Session | null = null;
   let showWaitingMessage = false;
   let skipWaitingAnimation = false;
+  
+  // Navigation state
+  let showProfilePage = false;
 
   // We'll stop using these global states and instead check per-chat status
   let isAwaitingResponse = false;
@@ -267,44 +271,77 @@
       }
     }, 100);
   }
+  
+  function navigateToProfile() {
+    showProfilePage = true;
+    // Stop refreshing when navigating away from chat
+    stopRefreshTimer();
+  }
+  
+  function navigateToChat() {
+    showProfilePage = false;
+    // Restart refreshing when returning to chat
+    if (currentChat) {
+      startRefreshTimer();
+    }
+  }
 </script>
 
-<div class="chat-container">
-  <Sidebar
-          {chats}
-          {currentChat}
-          on:newchat={newChatSplashScreen}
-          on:select={selectChat}
-  />
-
-  <main class="chat-main">
-    {#if currentChat}
-      <ChatHeader title={currentChat.title || ""} />
-      <MessageList
-        messages={currentChat.content || []}
-        showWaitingMessage={showWaitingMessage && !didCloseAwaiting}
-        skipWaitingAnimation={skipWaitingAnimation}
-        user={user}
-        on:closeWaiting={() => closeWaitingMessage()}
-      />
-      <ChatInput
-        on:submit={handleMessageSubmit}
-        isAwaitingResponse={isAwaitingResponse}
-      />
-    {:else}
-      <div class="empty-state">
-        <div class="welcome-container">
-          <h1>HumanGPT</h1>
-          <p class="welcome-text">How can <AnimatedNames /> help you today?</p>
-          <div class="centered-input">
-            <WelcomeInput on:submit={handleMessageSubmit} />
+{#if showProfilePage}
+  <ProfilePage {user} on:back={navigateToChat} />
+{:else}
+  <div class="chat-container">
+    <Sidebar
+            {chats}
+            {currentChat}
+            on:newchat={newChatSplashScreen}
+            on:select={selectChat}
+    />
+  
+    <main class="chat-main">
+      {#if currentChat}
+        <ChatHeader 
+          title={currentChat.title || ""} 
+          {user} 
+          on:profileClick={navigateToProfile} 
+        />
+        <MessageList
+          messages={currentChat.content || []}
+          showWaitingMessage={showWaitingMessage && !didCloseAwaiting}
+          skipWaitingAnimation={skipWaitingAnimation}
+          user={user}
+          on:closeWaiting={() => closeWaitingMessage()}
+        />
+        <ChatInput
+          on:submit={handleMessageSubmit}
+          isAwaitingResponse={isAwaitingResponse}
+        />
+      {:else}
+        <div class="profile-header-container">
+          <div class="profile-spacer"></div>
+          <div class="profile-button-container">
+            <button class="profile-nav-button" on:click={navigateToProfile}>
+              <svg viewBox="0 0 24 24" width="20" height="20">
+                <path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/>
+              </svg>
+              Profile
+            </button>
           </div>
-          <p class="description-text">When you ask HumanGPT a question, a real human being will answer. Please be considerate of your fellow meat sacks.</p>
         </div>
-      </div>
-    {/if}
-  </main>
-</div>
+        <div class="empty-state">
+          <div class="welcome-container">
+            <h1>HumanGPT</h1>
+            <p class="welcome-text">How can <AnimatedNames /> help you today?</p>
+            <div class="centered-input">
+              <WelcomeInput on:submit={handleMessageSubmit} />
+            </div>
+            <p class="description-text">When you ask HumanGPT a question, a real human being will answer. Please be considerate of your fellow meat sacks.</p>
+          </div>
+        </div>
+      {/if}
+    </main>
+  </div>
+{/if}
 
 <style>
   .chat-container {
@@ -320,6 +357,39 @@
     flex-direction: column;
     background-color: #343541;
     color: white;
+  }
+
+  .profile-header-container {
+    display: flex;
+    justify-content: flex-end;
+    padding: 16px;
+    border-bottom: 1px solid #444654;
+  }
+  
+  .profile-spacer {
+    flex: 1;
+  }
+  
+  .profile-button-container {
+    display: flex;
+    justify-content: flex-end;
+  }
+  
+  .profile-nav-button {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background-color: rgba(16, 163, 127, 0.2);
+    border: 1px solid rgba(16, 163, 127, 0.4);
+    color: #c5c5d2;
+    padding: 8px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+  }
+  
+  .profile-nav-button:hover {
+    background-color: rgba(16, 163, 127, 0.3);
   }
 
   .empty-state {

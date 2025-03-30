@@ -33,7 +33,7 @@ def create_temp_user() -> UserPublic:
     user_store[guest_id] = UserSecret(
         uuid=guest_id,
         display_name = "guest_user_" + str(random.randint(10000000, 99999999)),
-        pfp_url="todo",
+        pfp_url="guest_url",
     )
     return user_store[guest_id].to_pub()
 
