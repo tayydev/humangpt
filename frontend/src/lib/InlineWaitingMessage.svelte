@@ -249,7 +249,7 @@
   
   .content-container {
     padding: 0;
-    max-height: 350px; /* Reduced to avoid causing scrollbars */
+    max-height: 500px; /* Increased height for taller window */
     overflow: hidden;
     width: 100%;
     box-sizing: border-box;
@@ -257,7 +257,7 @@
 
   .questions-container {
     padding: 16px;
-    max-height: 350px; /* Reduced to match content-container */
+    max-height: 500px; /* Increased to match content-container */
     overflow-y: auto;
   }
 
@@ -320,7 +320,7 @@
   /* Question details view */
   .question-details {
     padding: 16px;
-    max-height: 350px; /* Reduced to match other containers */
+    max-height: 500px; /* Increased to match other containers */
     overflow-y: auto;
     width: 100%;
     box-sizing: border-box;
