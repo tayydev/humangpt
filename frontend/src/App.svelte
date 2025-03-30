@@ -407,6 +407,15 @@
     flex-direction: column;
     background-color: #343541;
     color: white;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  /* Safari-specific fixes */
+  @supports (-webkit-touch-callout: none) {
+    .chat-main {
+      height: -webkit-fill-available;
+    }
   }
   
   .menu-toggle {

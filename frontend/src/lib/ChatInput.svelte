@@ -96,6 +96,15 @@
   .input-container {
     padding: 16px;
     border-top: 1px solid #444654;
+    background-color: #343541;
+  }
+  
+  /* Safari-specific styles */
+  @supports (-webkit-touch-callout: none) {
+    .input-container {
+      position: relative;
+      z-index: 5;
+    }
   }
 
   form {

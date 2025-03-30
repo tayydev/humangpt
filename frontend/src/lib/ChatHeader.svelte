@@ -31,6 +31,15 @@
     align-items: center;
     height: 56px;
     box-sizing: border-box;
+    background-color: #343541;
+  }
+  
+  /* Safari-specific styles */
+  @supports (-webkit-touch-callout: none) {
+    .chat-header {
+      position: relative;
+      z-index: 5;
+    }
   }
 
   .title-container {

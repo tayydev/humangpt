@@ -76,6 +76,12 @@
       overflow-x: hidden;
       -webkit-box-sizing: border-box;
       box-sizing: border-box;
+      /* Ensure smooth scrolling with momentum on iOS */
+      -webkit-overflow-scrolling: touch;
+      /* Prevent bouncing effects that cause whole page scrolling */
+      overscroll-behavior: contain;
+      /* Improve performance */
+      -webkit-transform: translateZ(0);
     }
   }
 
