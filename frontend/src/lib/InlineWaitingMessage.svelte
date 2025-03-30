@@ -162,10 +162,12 @@
         {:else}
           {#each sessions as session}
             <div class="question-card">
-              <div class="question-content">{session.title}</div>
+              <div class="question-header">
+                <div class="question-content">{session.title}</div>
+                <button class="help-button" on:click={() => selectSession(session)}>Help Answer</button>
+              </div>
               <div class="question-metadata">
                 <span class="time-ago">{getMinutesAgo(session.created_timestamp)} minutes ago</span>
-                <button class="help-button" on:click={() => selectSession(session)}>Help Answer</button>
               </div>
             </div>
           {/each}
@@ -272,21 +274,32 @@
     background-color: #4c4d5e;
   }
 
+  .question-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+    width: 100%;
+  }
+  
   .question-content {
     font-size: 14px;
-    margin-bottom: 10px;
     color: #ffffff;
+    flex: 1;
+    margin-right: 12px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .question-metadata {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
     font-size: 12px;
   }
 
   .time-ago {
     color: #8e8ea0;
+    font-style: italic;
   }
 
   .help-button {
