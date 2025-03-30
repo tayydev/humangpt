@@ -9,14 +9,14 @@
   import type {Session, UserPublic} from "humangpt-client"
   import { onMount } from 'svelte';
 
-  let user: UserPublic | null = null;
+  let user: UserPublic = {uuid: "", display_name: "loading...", pfp_url: ""};
   let chats: Session[] = [];
   let currentChat: Session | null = null;
   let showWaitingMessage = false;
   let skipWaitingAnimation = false;
-  
+
   // We'll stop using these global states and instead check per-chat status
-  let isAwaitingResponse = false; 
+  let isAwaitingResponse = false;
   let canSendMessage = true;
 
   // Helper function to deduplicate chats by UUID
@@ -41,7 +41,7 @@
         if (response.data) {
           currentChat = response.data;
           chats = deduplicateChats(response.data, chats);
-          
+
           // Check message status upon loading a chat
           updateCurrentChatStatus();
         }
@@ -56,7 +56,7 @@
     currentChat = null;
     // Remove session from URL
     updateUrlWithSession(null);
-    
+
     // Reset status when returning to splash screen
     isAwaitingResponse = false;
     canSendMessage = true;
@@ -66,7 +66,7 @@
     currentChat = event.detail;
     // Update URL with selected session UUID
     updateUrlWithSession(event.detail.uuid);
-    
+
     // Update status when switching to a different chat
     updateCurrentChatStatus();
   }
@@ -83,10 +83,10 @@
 
   async function handleMessageSubmit(event: CustomEvent<string>) {
     const messageContent = event.detail;
-    
+
     // First check current chat status
     updateCurrentChatStatus();
-    
+
     // Don't allow sending if already waiting for a response in the current chat
     if (!canSendMessage) return;
 
@@ -115,7 +115,7 @@
 
       // Check if last message needs a response and update UI accordingly
       updateCurrentChatStatus();
-      
+
       // Scroll to bottom when new messages arrive
       scrollChatToBottom();
 
@@ -149,21 +149,21 @@
         isAwaitingResponse: false
       };
     }
-    
+
     // Get the last message
     const lastMessage = chat.content[chat.content.length - 1];
-    
+
     // If the last message is from the user (not an answer), we're awaiting a response
     const canSend = lastMessage.is_answer !== false;
     const isAwaiting = !canSend;
-    
+
     return {
       canSendMessage: canSend,
       isAwaitingResponse: isAwaiting,
       lastMessage
     };
   }
-  
+
   // Check status for current chat and update UI state
   function updateCurrentChatStatus() {
     if (!currentChat) {
@@ -171,14 +171,14 @@
       isAwaitingResponse = false;
       return;
     }
-    
+
     const status = checkChatStatus(currentChat);
     canSendMessage = status.canSendMessage;
     isAwaitingResponse = status.isAwaitingResponse;
-    
+
     console.log('Current chat status:', status);
   }
-  
+
   // Helper function to force scroll to bottom
   function scrollChatToBottom() {
     // Use setTimeout to ensure it runs after DOM updates
@@ -210,9 +210,10 @@
         showWaitingMessage={showWaitingMessage}
         skipWaitingAnimation={skipWaitingAnimation}
         isAwaitingResponse={isAwaitingResponse}
+        user={user}
         on:closeWaiting={() => closeWaitingMessage()}
       />
-      <ChatInput 
+      <ChatInput
         on:submit={handleMessageSubmit}
         isAwaitingResponse={isAwaitingResponse}
         canSendMessage={canSendMessage}

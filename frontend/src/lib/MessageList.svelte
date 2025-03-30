@@ -3,6 +3,9 @@
   import MessageComponent from './Message.svelte';
   import InlineWaitingMessage from './InlineWaitingMessage.svelte';
   import { createEventDispatcher, onMount, afterUpdate } from 'svelte';
+  import type {UserPublic} from "humangpt-client";
+
+  export let user: UserPublic;
 
   export let messages: Message[];
   export let showWaitingMessage = false;
@@ -45,6 +48,7 @@
     <InlineWaitingMessage
       visible={showWaitingMessage}
       skipAnimation={skipWaitingAnimation}
+      user={user}
       on:close={handleCloseWaitingMessage}
     />
   </div>

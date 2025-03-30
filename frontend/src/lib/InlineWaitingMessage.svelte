@@ -1,9 +1,12 @@
 <script lang="ts">
   import { fade } from 'svelte/transition';
-  import { createEventDispatcher } from 'svelte';
+  import {createEventDispatcher, onMount} from 'svelte';
+  import type {Session, UserPublic} from "humangpt-client";
+  import {apiClient} from "./api-client";
 
   export let visible = false;
   export let skipAnimation = false;
+  export let user: UserPublic;
 
   const dispatch = createEventDispatcher();
 
@@ -12,16 +15,23 @@
   }
 
   // Sample questions for the list
-  const sampleQuestions = [
-    { id: 1, question: "How do I configure a React app to use TypeScript?", timeAgo: "5 minutes ago" },
-    { id: 2, question: "What's the best way to deploy a Svelte application to Vercel?", timeAgo: "8 minutes ago" },
-    { id: 3, question: "Can someone explain Docker networking between containers?", timeAgo: "12 minutes ago" },
-  ];
+  let sessions: Session[] = []
+
+  function getMinutesAgo(isoString: string): number {
+    const time = new Date(isoString);
+    const now = new Date();
+    const diffMs = now.getTime() - time.getTime();
+    return Math.floor(diffMs / 60000);
+  }
+
+  onMount(async () => {
+    sessions = (await apiClient.getUnansweredUnansweredSessionsGet(user.uuid)).data
+  })
 </script>
 
 {#if visible}
-<div class="waiting-message" class:no-animation={skipAnimation} 
-  in:fade={{duration: skipAnimation ? 0 : 300}} 
+<div class="waiting-message" class:no-animation={skipAnimation}
+  in:fade={{duration: skipAnimation ? 0 : 300}}
   out:fade={{duration: skipAnimation ? 0 : 300}}>
   <div class="message-header">
     <h3>Hey there, while you wait for someone to answer your question, consider helping out a fellow human.</h3>
@@ -33,11 +43,11 @@
   </div>
 
   <div class="questions-container">
-    {#each sampleQuestions as question}
+    {#each sessions as question}
       <div class="question-card">
-        <div class="question-content">{question.question}</div>
+        <div class="question-content">{question.title}</div>
         <div class="question-metadata">
-          <span class="time-ago">{question.timeAgo}</span>
+          <span class="time-ago">{getMinutesAgo(question.created_timestamp)} minutes ago</span>
           <button class="help-button">Help Answer</button>
         </div>
       </div>
