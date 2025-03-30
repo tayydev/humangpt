@@ -1,0 +1,13 @@
+# HumanGPT Robots.txt file
+User-agent: *
+Allow: /
+
+# Sitemap location
+Sitemap: https://humangpt.dev/sitemap.xml
+
+# Prevent any future crawling of admin areas
+Disallow: /admin/
+Disallow: /api/
+
+# Set crawl delay to be polite to servers
+Crawl-delay: 10
