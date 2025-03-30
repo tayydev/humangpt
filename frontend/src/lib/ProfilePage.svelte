@@ -120,12 +120,26 @@
 
   @media (max-width: 768px) {
     header {
-      padding: 15px 10px;
+      padding: 15px max(16px, 4%);
     }
 
     .back-button {
       margin-right: 8px;
       padding: 6px;
+    }
+  }
+
+  @media (max-width: 786px) {
+    .profile-section,
+    .section {
+      padding-left: 16px;
+      padding-right: 16px;
+    }
+
+    .divider {
+      margin-left: 16px;
+      margin-right: 16px;
+      width: calc(100% - 32px);
     }
 
     .back-button svg {
@@ -139,16 +153,19 @@
   }
 
   .profile-content {
-    padding: 0 max(20px, 5%);
+    padding: 0;
     overflow-y: auto;
     flex: 1;
     max-width: 1200px;
     margin: 0 auto;
     width: 100%;
+    box-sizing: border-box;
   }
 
   .profile-section {
-    padding: 32px 0 20px 0;
+    padding: 32px max(24px, 5%) 20px;
+    width: 100%;
+    box-sizing: border-box;
   }
 
   .profile-header {
@@ -235,12 +252,16 @@
   .divider {
     height: 1px;
     background: linear-gradient(to right, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.03));
-    margin: 10px 0;
+    margin: 10px max(24px, 5%);
+    width: calc(100% - 2 * max(24px, 5%));
+    box-sizing: border-box;
   }
 
   .section {
-    padding: 32px 0 20px 0;
+    padding: 32px max(24px, 5%) 20px;
     text-align: left;
+    width: 100%;
+    box-sizing: border-box;
   }
 
   h3 {
@@ -265,6 +286,12 @@
     border-radius: 1px;
   }
 
+  @media (max-width: 786px) {
+    h3 {
+      font-size: 16px;
+    }
+  }
+
 
   .privacy-notice {
     font-size: 14px;
@@ -272,6 +299,12 @@
     margin-bottom: 24px;
     line-height: 1.6;
     text-align: left;
+  }
+
+  @media (max-width: 786px) {
+    .privacy-notice {
+      font-size: 13px;
+    }
   }
 
 </style>
