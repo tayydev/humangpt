@@ -12,8 +12,6 @@
   export let skipWaitingAnimation = false;
   // We no longer need isAwaitingResponse in this component
 
-
-
   const dispatch = createEventDispatcher();
   let messagesContainer: HTMLElement;
 
@@ -30,10 +28,15 @@
     }
   }
 
-  // After any update, scroll to bottom
-  afterUpdate(() => {
-    scrollToBottom();
-  });
+  // After update to waiting message scroll
+  $: if(showWaitingMessage) {
+    scrollToBottom()
+  }
+
+  //after mount scroll once
+  onMount(() => {
+    scrollToBottom()
+  })
 
   function handleCloseWaitingMessage() {
     dispatch('closeWaiting');
@@ -69,7 +72,7 @@
     max-width: 100%;
     -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
   }
-  
+
   /* iOS-specific adjustments */
   @supports (-webkit-touch-callout: none) {
     .messages-container {
@@ -112,7 +115,7 @@
     -webkit-box-sizing: border-box;
     box-sizing: border-box;
   }
-  
+
   /* iOS-specific adjustments */
   @supports (-webkit-touch-callout: none) {
     .waiting-message-container {
