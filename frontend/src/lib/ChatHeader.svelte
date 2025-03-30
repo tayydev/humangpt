@@ -22,11 +22,13 @@
 
 <style>
   .chat-header {
-    padding: 16px;
-    border-bottom: 1px solid #444654;
+    padding: 15px 16px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
     display: flex;
     justify-content: space-between;
     align-items: center;
+    height: 56px;
+    box-sizing: border-box;
   }
 
   h2 {

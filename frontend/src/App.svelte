@@ -378,8 +378,10 @@
   .profile-header-container {
     display: flex;
     justify-content: flex-end;
-    padding: 16px;
+    padding: 8px 16px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    height: 56px;
+    box-sizing: border-box;
   }
   
   .profile-spacer {
