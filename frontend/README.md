@@ -1,6 +1,17 @@
-# Svelte + TS + Vite
+# HumanGPT Frontend
 
-This template should help get you started developing with Svelte and TypeScript in Vite.
+This is the frontend for HumanGPT, built with Svelte, TypeScript, and Vite.
+
+## Environment Setup
+
+The application uses environment variables for configuration. Copy the `.env.example` file to `.env` and adjust as needed:
+
+```bash
+cp .env.example .env
+```
+
+Available environment variables:
+- `VITE_API_BASE_PATH`: API base URL (default: `https://api.humangpt.dev`, override with `http://localhost:8000` for local development)
 
 ## Recommended IDE Setup
 

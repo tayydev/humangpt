@@ -4,10 +4,12 @@
 import { DefaultApi } from "humangpt-client";
 import { Configuration } from "humangpt-client";
 
+// Default API base path with environment variable override
+const API_BASE_PATH = import.meta.env.VITE_API_BASE_PATH || 'https://api.humangpt.dev';
+
 // Create a singleton instance of the API client
 const config = new Configuration({
-  basePath: 'https://api.humangpt.dev'  // Assuming backend runs on this URL
-  //basePath: 'http://localhost:8000'  // Assuming backend runs on this URL
+  basePath: API_BASE_PATH
 });
 
 export const apiClient = new DefaultApi(config);
