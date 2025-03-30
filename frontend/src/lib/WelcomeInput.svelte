@@ -60,7 +60,7 @@
     color: white;
     font-family: inherit;
     min-height: 24px;
-    font-size: 1rem;
+    font-size: 16px; /* Minimum font size to prevent iOS zoom */
     line-height: 1.5;
   }
 

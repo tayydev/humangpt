@@ -129,6 +129,7 @@
     color: white;
     font-family: inherit;
     min-height: 44px;
+    font-size: 16px; /* Minimum font size to prevent iOS zoom */
   }
 
   textarea:focus {
