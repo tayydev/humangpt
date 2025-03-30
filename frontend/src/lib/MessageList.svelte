@@ -74,5 +74,8 @@
 
   .waiting-message-container {
     margin-top: auto;
+    display: flex;
+    justify-content: center;
+    width: 100%;
   }
 </style>

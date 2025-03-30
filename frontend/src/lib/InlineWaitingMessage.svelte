@@ -183,7 +183,9 @@
     border-radius: 8px;
     border: 1px solid #444654;
     overflow: hidden;
-    width: 100%;
+    width: 95%; /* Slightly narrower to prevent scrollbar */
+    max-width: 900px;
+    align-self: center;
   }
 
   .message-header {
@@ -245,13 +247,13 @@
   
   .content-container {
     padding: 0;
-    max-height: 400px;
+    max-height: 350px; /* Reduced to avoid causing scrollbars */
     overflow: hidden;
   }
 
   .questions-container {
     padding: 16px;
-    max-height: 400px;
+    max-height: 350px; /* Reduced to match content-container */
     overflow-y: auto;
   }
 
@@ -303,7 +305,7 @@
   /* Question details view */
   .question-details {
     padding: 16px;
-    max-height: 400px;
+    max-height: 350px; /* Reduced to match other containers */
     overflow-y: auto;
   }
   
@@ -330,15 +332,15 @@
   }
   
   .context-message.question {
-    background-color: #444654;
-    align-self: flex-end;
+    background-color: #40414f;
+    border: 1px solid #565869;
+    align-self: flex-start; /* User questions on the left */
     max-width: 90%;
   }
   
   .context-message.answer {
-    background-color: #40414f;
-    border: 1px solid #565869;
-    align-self: flex-start;
+    background-color: #444654; 
+    align-self: flex-end; /* Answers on the right */
     max-width: 90%;
   }
   
