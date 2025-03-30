@@ -24,6 +24,10 @@
     return Math.floor(diffMs / 60000);
   }
 
+  async function respondToPerson(message: string, session_id: string) {
+    await apiClient.submitSubmitPost(message, user.uuid, true, session_id)
+  }
+
   onMount(async () => {
     sessions = (await apiClient.getUnansweredUnansweredSessionsGet(user.uuid)).data
   })
