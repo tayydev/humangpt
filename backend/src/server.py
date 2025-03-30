@@ -44,6 +44,15 @@ async def get_unanswered(answerer_id: str) -> list[Session]:
     random.shuffle(unanswered)
     return unanswered
 
+@app.get("/all-sessions")
+async def get_all() -> list[Session]:
+    sessions = get_sessions_list()
+    all_sessions = []
+    for session in sessions:
+        if session.content[-1].is_answer:
+            all_sessions.append(session)
+    return all_sessions
+
 @app.post("/guest_user")
 async def guest() -> UserPublic:
     return create_temp_user()
