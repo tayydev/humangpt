@@ -82,7 +82,7 @@
     try {
       console.log("loading unanswered", user.uuid)
       const response = await apiClient.getUnansweredUnansweredSessionsGet(user.uuid);
-      sessions = response.data;
+      sessions = response.data.filter(sesh => sesh.uuid );
     } catch (error) {
       console.error('Error loading unanswered sessions:', error);
       sessions = [];
@@ -91,14 +91,11 @@
 
   let showSubmitSuccess = false;
 
-
-  let isLoaded = false;
-
   // This reactive statement runs whenever requiredProperty changes
-  $: if (user && !isLoaded) {
-    loadUnansweredSessions().then(() => {
-      isLoaded = true;
-    });
+  $: if (user) {
+    (async () => {
+      await loadUnansweredSessions();
+    })();
   }
 
   function handleKeydown(e: KeyboardEvent) {
