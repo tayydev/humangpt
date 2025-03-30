@@ -6,7 +6,7 @@ import { Configuration } from "humangpt-client";
 
 // Create a singleton instance of the API client
 const config = new Configuration({
-  basePath: 'http://localhost:8000'  // Assuming backend runs on this URL
+  basePath: 'http://api.humangpt.dev'  // Assuming backend runs on this URL
 });
 
 export const apiClient = new DefaultApi(config);
