@@ -6,6 +6,7 @@
   import WelcomeInput from './lib/WelcomeInput.svelte';
   import AnimatedNames from './lib/AnimatedNames.svelte';
   import ProfilePage from './lib/ProfilePage.svelte';
+  import ProfileButton from './lib/ProfileButton.svelte';
   import {apiClient} from "./lib/api-client";
   import type {Session, UserPublic} from "humangpt-client"
   import { onMount, onDestroy } from 'svelte';
@@ -340,12 +341,7 @@
         <div class="profile-header-container">
           <div class="profile-spacer"></div>
           <div class="profile-button-container">
-            <button class="profile-nav-button" on:click={navigateToProfile}>
-              <svg viewBox="0 0 24 24" width="20" height="20">
-                <path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/>
-              </svg>
-              Profile
-            </button>
+            <ProfileButton {user} on:profileClick={navigateToProfile} />
           </div>
         </div>
         <div class="empty-state">
@@ -383,7 +379,7 @@
     display: flex;
     justify-content: flex-end;
     padding: 16px;
-    border-bottom: 1px solid #444654;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   }
   
   .profile-spacer {
@@ -393,23 +389,6 @@
   .profile-button-container {
     display: flex;
     justify-content: flex-end;
-  }
-  
-  .profile-nav-button {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    background-color: rgba(16, 163, 127, 0.2);
-    border: 1px solid rgba(16, 163, 127, 0.4);
-    color: #c5c5d2;
-    padding: 8px 12px;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background-color 0.2s;
-  }
-  
-  .profile-nav-button:hover {
-    background-color: rgba(16, 163, 127, 0.3);
   }
 
   .empty-state {
