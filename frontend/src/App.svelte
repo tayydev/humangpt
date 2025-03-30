@@ -300,9 +300,8 @@
     setTimeout(() => {
       const messagesContainer = document.querySelector('.messages-container');
       if (messagesContainer) {
-        const scrollHeight = messagesContainer.scrollHeight;
         messagesContainer.scrollTo({
-          top: scrollHeight,
+          top: messagesContainer.scrollHeight,
           behavior: 'smooth'
         });
       }
@@ -408,9 +407,6 @@
     flex-direction: column;
     background-color: #343541;
     color: white;
-    position: relative;
-    height: 100%;
-    overflow: hidden;
   }
   
   .menu-toggle {
