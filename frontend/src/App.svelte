@@ -7,7 +7,7 @@
   import AnimatedNames from './lib/AnimatedNames.svelte';
   import {apiClient} from "./lib/api-client";
   import type {Session, UserPublic} from "humangpt-client"
-  import { onMount } from 'svelte';
+  import { onMount, onDestroy } from 'svelte';
 
   let user: UserPublic = {uuid: "", display_name: "loading...", pfp_url: ""};
   let chats: Session[] = [];
@@ -18,6 +18,9 @@
   // We'll stop using these global states and instead check per-chat status
   let isAwaitingResponse = false;
   let canSendMessage = true;
+
+  // Timer for auto-refreshing current chat
+  let refreshTimer: number | null = null;
 
   // Helper function to deduplicate chats by UUID
   function deduplicateChats(newChat: Session, existingChats: Session[]): Session[] {
@@ -57,6 +60,9 @@
             showWaitingMessage = isAwaitingResponse;
             scrollChatToBottom(); // Scroll to bottom when popup appears
           }, 500);
+
+          // Start the refresh timer for the current chat
+          startRefreshTimer();
         }
       } catch (error) {
         console.error('Failed to load session:', error);
@@ -64,6 +70,11 @@
     }
 
     console.log("mount finished", showWaitingMessage)
+  });
+
+  // Clean up timer on component destroy
+  onDestroy(() => {
+    stopRefreshTimer();
   });
 
   function newChatSplashScreen() {
@@ -75,6 +86,9 @@
     // Reset status when returning to splash screen
     isAwaitingResponse = false;
     canSendMessage = true;
+
+    // Stop the refresh timer when returning to splash screen
+    stopRefreshTimer();
   }
 
   function selectChat(event: CustomEvent<Session>) {
@@ -84,6 +98,49 @@
 
     // Update status when switching to a different chat
     updateCurrentChatStatus();
+
+    // Refresh the current chat when switching to it
+    refreshCurrentChat();
+  }
+
+  // Function to refresh the current chat
+  async function refreshCurrentChat() {
+    if (!currentChat || !currentChat.uuid) return;
+
+    try {
+      const response = await apiClient.getSessionSessionUuidGet(currentChat.uuid);
+      if (response.data) {
+        // Update current chat with fresh data
+        currentChat = response.data;
+        // Update chats list
+        chats = deduplicateChats(response.data, chats);
+        // Update status
+        updateCurrentChatStatus();
+        skipWaitingAnimation = true;
+        showWaitingMessage = isAwaitingResponse;
+      }
+    } catch (error) {
+      console.error('Failed to refresh session:', error);
+    }
+  }
+
+  // Start the refresh timer
+  function startRefreshTimer() {
+    // Clear any existing timer first
+    stopRefreshTimer();
+
+    // Set up a new timer to refresh every 5 seconds
+    refreshTimer = setInterval(() => {
+      refreshCurrentChat();
+    }, 5000);
+  }
+
+  // Stop the refresh timer
+  function stopRefreshTimer() {
+    if (refreshTimer !== null) {
+      clearInterval(refreshTimer);
+      refreshTimer = null;
+    }
   }
 
   function updateUrlWithSession(sessionUuid: string | null) {
@@ -138,6 +195,9 @@
       if (result.uuid) {
         updateUrlWithSession(result.uuid);
       }
+
+      // Start or restart the refresh timer for the current chat
+      startRefreshTimer();
 
       // Show the waiting message after 1.5 seconds with animation
       setTimeout(() => {
