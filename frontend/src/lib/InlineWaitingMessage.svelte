@@ -37,18 +37,18 @@
 
   async function submitResponse() {
     if (!selectedSession || !responseText.trim() || isSubmitting) return;
-    
+
     try {
       isSubmitting = true;
       await apiClient.submitSubmitPost(responseText, user.uuid, true, selectedSession.uuid);
-      
+
       // After successful submission
       selectedSession = null;
       responseText = '';
-      
+
       // Refresh the list of unanswered sessions
       await loadUnansweredSessions();
-      
+
       // Show success message (temporary notification or state)
       showSubmitSuccess = true;
       setTimeout(() => {
@@ -89,7 +89,7 @@
 <div class="waiting-message" class:no-animation={skipAnimation}
   in:fade={{duration: skipAnimation ? 0 : 300}}
   out:fade={{duration: skipAnimation ? 0 : 300}}>
-  
+
   <div class="message-header">
     {#if selectedSession}
       <h3>
@@ -103,7 +103,7 @@
     {:else}
       <h3>Hey there, while you wait for someone to answer your question, consider helping out a fellow human.</h3>
     {/if}
-    
+
     <button class="close-button" on:click={closePopup} aria-label="Close">
       <svg viewBox="0 0 24 24" width="18" height="18">
         <path fill="currentColor" d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"></path>
@@ -116,7 +116,7 @@
       <!-- Question details and response area -->
       <div class="question-details" in:slide={{duration: 200}}>
         <div class="question-title">{selectedSession.title}</div>
-        
+
         <!-- Show conversation context -->
         <div class="conversation-context">
           {#each selectedSession.content as message}
@@ -126,20 +126,20 @@
             </div>
           {/each}
         </div>
-        
+
         <!-- Response textarea and submit button -->
         <div class="response-area">
-          <textarea 
-            bind:value={responseText} 
+          <textarea
+            bind:value={responseText}
             placeholder="Type your response here..."
             rows="3"
             on:keydown={handleKeydown}
             disabled={isSubmitting}
           ></textarea>
-          
-          <button 
-            class="submit-button" 
-            on:click={submitResponse} 
+
+          <button
+            class="submit-button"
+            on:click={submitResponse}
             disabled={!responseText.trim() || isSubmitting}
           >
             {isSubmitting ? 'Sending...' : 'Submit Response'}
@@ -154,7 +154,7 @@
             Thanks for helping out! Your response has been submitted.
           </div>
         {/if}
-        
+
         {#if sessions.length === 0}
           <div class="no-questions-message">
             There are no questions waiting for answers right now. Check back later!
@@ -167,7 +167,7 @@
                 <button class="help-button" on:click={() => selectSession(session)}>Help Answer</button>
               </div>
               <div class="question-metadata">
-                <span class="time-ago">{getMinutesAgo(session.created_timestamp)} minutes ago</span>
+                <span class="time-ago">{getMinutesAgo(session.updated_timestamp)} minutes ago</span>
               </div>
             </div>
           {/each}
@@ -246,7 +246,7 @@
     background-color: rgba(255, 255, 255, 0.1);
     color: #c5c5d2;
   }
-  
+
   .content-container {
     padding: 0;
     max-height: 500px; /* Increased height for taller window */
@@ -281,7 +281,7 @@
     margin-bottom: 8px;
     width: 100%;
   }
-  
+
   .question-content {
     font-size: 14px;
     color: #ffffff;
@@ -316,7 +316,7 @@
   .help-button:hover {
     background-color: #0c8063;
   }
-  
+
   /* Question details view */
   .question-details {
     padding: 16px;
@@ -325,7 +325,7 @@
     width: 100%;
     box-sizing: border-box;
   }
-  
+
   .question-title {
     font-size: 15px;
     font-weight: 500;
@@ -334,7 +334,7 @@
     padding-bottom: 8px;
     border-bottom: 1px solid #444654;
   }
-  
+
   .conversation-context {
     margin-bottom: 16px;
     display: flex;
@@ -344,13 +344,13 @@
     box-sizing: border-box;
     padding-right: 4px; /* Add padding to account for scrollbar width */
   }
-  
+
   .context-message {
     padding: 10px;
     border-radius: 6px;
     font-size: 13px;
   }
-  
+
   .context-message.question {
     background-color: #40414f;
     border: 1px solid #565869;
@@ -359,27 +359,27 @@
     box-sizing: border-box;
     word-break: break-word;
   }
-  
+
   .context-message.answer {
-    background-color: #444654; 
+    background-color: #444654;
     align-self: flex-end; /* Answers on the right */
     max-width: 85%;
     box-sizing: border-box;
     word-break: break-word;
   }
-  
+
   .message-author {
     font-size: 12px;
     font-weight: 500;
     margin-bottom: 4px;
     color: #8e8ea0;
   }
-  
+
   .message-text {
     color: #ffffff;
     white-space: pre-wrap;
   }
-  
+
   .response-area {
     display: flex;
     flex-direction: column;
@@ -387,7 +387,7 @@
     width: 100%;
     box-sizing: border-box;
   }
-  
+
   textarea {
     width: 100%;
     padding: 12px;
@@ -400,12 +400,12 @@
     min-height: 80px;
     box-sizing: border-box;
   }
-  
+
   textarea:focus {
     outline: none;
     border-color: #10a37f;
   }
-  
+
   .submit-button {
     background-color: #10a37f;
     color: white;
@@ -417,16 +417,16 @@
     transition: background-color 0.2s;
     align-self: flex-end;
   }
-  
+
   .submit-button:hover:not(:disabled) {
     background-color: #0c8063;
   }
-  
+
   .submit-button:disabled {
     background-color: #2a2b32;
     cursor: not-allowed;
   }
-  
+
   .success-message {
     background-color: rgba(16, 163, 127, 0.2);
     color: #10a37f;
@@ -437,7 +437,7 @@
     text-align: center;
     border: 1px solid rgba(16, 163, 127, 0.4);
   }
-  
+
   .no-questions-message {
     color: #8e8ea0;
     text-align: center;
