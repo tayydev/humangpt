@@ -44,11 +44,18 @@
 
           // Check message status upon loading a chat
           updateCurrentChatStatus();
+          setTimeout(() => {
+            skipWaitingAnimation = false; // Reset to ensure animation plays when showing
+            showWaitingMessage = isAwaitingResponse;
+            scrollChatToBottom(); // Scroll to bottom when popup appears
+          }, 500);
         }
       } catch (error) {
         console.error('Failed to load session:', error);
       }
     }
+
+    console.log("mount finished", showWaitingMessage)
   });
 
   function newChatSplashScreen() {
@@ -156,6 +163,8 @@
     // If the last message is from the user (not an answer), we're awaiting a response
     const canSend = lastMessage.is_answer !== false;
     const isAwaiting = !canSend;
+
+    console.log("chat status check!!!", isAwaitingResponse)
 
     return {
       canSendMessage: canSend,
