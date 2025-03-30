@@ -107,6 +107,9 @@
       left: 0;
       right: 0;
       z-index: 50;
+      padding-bottom: calc(16px + env(safe-area-inset-bottom, 0));
+      height: auto;
+      min-height: 77px;
     }
   }
 

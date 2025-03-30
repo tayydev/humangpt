@@ -73,12 +73,13 @@
   /* iOS-specific adjustments */
   @supports (-webkit-touch-callout: none) {
     .messages-container {
-      position: absolute;
+      position: fixed;
       top: 56px; /* Header height */
-      bottom: 77px; /* Input height */
+      bottom: calc(77px + env(safe-area-inset-bottom, 0)); /* Input height + safe area inset */
       left: 0;
       right: 0;
       overflow-x: hidden;
+      overflow-y: auto;
       -webkit-box-sizing: border-box;
       box-sizing: border-box;
       /* Ensure smooth scrolling with momentum on iOS */
@@ -87,7 +88,6 @@
       overscroll-behavior: contain;
       /* Improve performance */
       -webkit-transform: translateZ(0);
-      padding-bottom: env(safe-area-inset-bottom, 16px); /* Account for the home indicator area */
     }
   }
 
@@ -96,6 +96,7 @@
     flex-direction: column;
     gap: 24px;
     width: 100%;
+    padding-bottom: 40px; /* Add extra space at the bottom to ensure last message is fully visible */
   }
 
   /* Loading indicator is now included directly in messages-list */
