@@ -14,13 +14,13 @@ def get_sessions_list():
     raw_sessions = list(get_sessions_collection().find())
     return [Session.model_validate(session) for session in raw_sessions]
 
-def get_session (uuid : str) -> Session:
+def get_session(uuid : str) -> Session:
     collection = get_sessions_collection()
     session = collection.find_one({"_id" : uuid})
     return Session.model_validate(session) if session else None
 
 # creates pydantic Session type
-def get_or_create_session (uuid: Optional[str], title: str, user_id: str):
+def get_or_create_session(uuid: Optional[str], title: str, user_id: str):
     if uuid:
         return get_session(uuid)
     else:

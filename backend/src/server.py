@@ -28,7 +28,7 @@ async def submit(msg: str, user_id: str, is_answer: bool, uuid: Optional[str] = 
 
 
 @app.get("/session/{uuid}")
-async def get_session(uuid: str):
+async def session_endpoint(uuid: str):
     return get_session(uuid)
 
 
