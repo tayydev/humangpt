@@ -20,8 +20,8 @@
   // Navigation state
   let showProfilePage = false;
   
-  // Mobile sidebar state
-  let isSidebarOpen = window?.innerWidth > 768;
+  // Mobile sidebar state - default false for SSR, will be set correctly on mount
+  let isSidebarOpen = false;
 
   // We'll stop using these global states and instead check per-chat status
   let isAwaitingResponse = false;
@@ -39,8 +39,10 @@
   }
 
   onMount(async () => {
-    // Initialize sidebar state based on screen width
-    isSidebarOpen = window.innerWidth > 768;
+    // Initialize sidebar state based on screen width after a small delay to prevent flash
+    setTimeout(() => {
+      isSidebarOpen = window.innerWidth > 768;
+    }, 0);
     
     // Add window resize listener
     window.addEventListener('resize', handleResize);
@@ -410,7 +412,7 @@
     position: fixed;
     top: 10px;
     left: 10px;
-    z-index: 1001;
+    z-index: 998; /* Lower than sidebar z-index to get covered */
     background-color: transparent;
     color: white;
     border: none;
@@ -446,6 +448,13 @@
   
   .overlay.active {
     display: block;
+  }
+  
+  /* Fix for initial page load dark screen */
+  @media (min-width: 769px) {
+    .overlay.active {
+      display: none;
+    }
   }
   
   @media (max-width: 768px) {

@@ -57,11 +57,22 @@
     right: 10px;
     background: transparent;
     border: none;
-    color: white;
-    font-size: 24px;
-    padding: 0;
+    color: #9ca3af;
+    font-size: 20px;
+    width: 28px;
+    height: 28px;
+    border-radius: 4px;
     cursor: pointer;
     z-index: 10;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s ease, color 0.2s ease;
+    padding: 0;
+  }
+  
+  .close-sidebar-btn:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: white;
   }
 
   .sidebar-header {
@@ -72,6 +83,18 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+  }
+  
+  @media (max-width: 768px) {
+    .sidebar-header {
+      padding-right: 60px; /* Increase padding to prevent overlap */
+    }
+    
+    .new-chat-btn {
+      margin-right: 12px; /* Add more margin to the new chat button */
+      font-size: 0.95rem; /* Slightly reduce button text size */
+      padding: 7px 10px; /* Slightly reduce button padding */
+    }
   }
 
   .new-chat-btn {
@@ -104,7 +127,7 @@
     }
 
     .close-sidebar-btn {
-      display: block;
+      display: flex;
     }
   }
 </style>
