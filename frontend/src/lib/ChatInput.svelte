@@ -1,46 +1,46 @@
 <script lang="ts">
   import { createEventDispatcher } from 'svelte';
   import { fade } from 'svelte/transition';
-  
+
   let message = '';
   const dispatch = createEventDispatcher();
-  
+
   // New props to control input state
   export let isAwaitingResponse = false;
   export let canSendMessage = true;
-  
+
   // Animation frames for waiting text
   const frames = [
-    "awaiting response   ",
-    "awaiting response.  ",
-    "awaiting response.. ",
-    "awaiting response..."
+    "Awaiting response   ",
+    "Awaiting response.  ",
+    "Awaiting response.. ",
+    "Awaiting response..."
   ];
-  
+
   let currentFrame = 0;
   let intervalId: number | null = null;
   let displayText = frames[0];
-  
+
   // Start and stop animation for awaiting response
   function startAnimation() {
     if (intervalId) return;
-    
+
     currentFrame = 0;
     displayText = frames[currentFrame];
-    
+
     intervalId = window.setInterval(() => {
       currentFrame = (currentFrame + 1) % frames.length;
       displayText = frames[currentFrame];
     }, 400);
   }
-  
+
   function stopAnimation() {
     if (intervalId) {
       clearInterval(intervalId);
       intervalId = null;
     }
   }
-  
+
   // Watch for changes in isAwaitingResponse
   $: if (isAwaitingResponse && !intervalId) {
     startAnimation();
@@ -71,16 +71,16 @@
       </div>
     {:else}
       <!-- Normal textarea when not awaiting response -->
-      <textarea 
-        bind:value={message} 
-        placeholder="Type your message here..." 
+      <textarea
+        bind:value={message}
+        placeholder="Type your message here..."
         rows="2"
         on:keydown={handleKeydown}
         disabled={!canSendMessage}
       ></textarea>
-      <button 
-        type="submit" 
-        disabled={!message.trim() || !canSendMessage} 
+      <button
+        type="submit"
+        disabled={!message.trim() || !canSendMessage}
         aria-label="Send message"
       >
         <svg viewBox="0 0 24 24" width="16" height="16" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -156,7 +156,7 @@
     left: 0;
     transform: translate(0, 0); /* Adjust if needed for perfect centering */
   }
-  
+
   /* Styles for awaiting response indicator */
   .awaiting-response {
     width: 100%;
@@ -167,7 +167,7 @@
     display: flex;
     align-items: center;
   }
-  
+
   .waiting-text {
     font-family: inherit;
     font-style: italic;

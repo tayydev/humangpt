@@ -11,7 +11,8 @@
   export let showWaitingMessage = false;
   export let skipWaitingAnimation = false;
   // We no longer need isAwaitingResponse in this component
-  export let isAwaitingResponse = false; // Keeping for compatibility
+
+
 
   const dispatch = createEventDispatcher();
   let messagesContainer: HTMLElement;
