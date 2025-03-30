@@ -1,6 +1,6 @@
 <script lang="ts">
   import { fade, slide } from 'svelte/transition';
-  import {createEventDispatcher, onMount} from 'svelte';
+  import {createEventDispatcher, onMount, onDestroy} from 'svelte';
   import type {Session, UserPublic, Message} from "humangpt-client";
   import {apiClient} from "./api-client";
 
@@ -13,8 +13,14 @@
   let selectedSession: Session | null = null;
   let responseText = '';
   let isSubmitting = false;
+  let refreshInterval: number | null = null;
 
   function closePopup() {
+    // Clear the refresh interval when the popup is closed
+    if (refreshInterval) {
+      clearInterval(refreshInterval);
+      refreshInterval = null;
+    }
     dispatch('close');
   }
 
@@ -50,6 +56,10 @@
   function backToQuestionsList() {
     selectedSession = null;
     responseText = '';
+    
+    // Restart the refresh interval when returning to the questions list
+    loadUnansweredSessions();
+    startRefreshInterval();
   }
 
   async function submitResponse() {
@@ -91,12 +101,47 @@
 
   let showSubmitSuccess = false;
 
-  // This reactive statement runs whenever requiredProperty changes
-  $: if (user) {
+  // This reactive statement runs whenever user or visible changes
+  $: if (user && visible) {
     (async () => {
       await loadUnansweredSessions();
+      
+      // Start the refresh interval if not already running
+      if (!refreshInterval && !selectedSession) {
+        startRefreshInterval();
+      }
     })();
   }
+  
+  function startRefreshInterval() {
+    // Clear any existing interval first
+    if (refreshInterval) {
+      clearInterval(refreshInterval);
+    }
+    
+    // Set new interval to reload every 5 seconds (5000 ms)
+    refreshInterval = setInterval(() => {
+      if (!selectedSession) {
+        loadUnansweredSessions();
+      }
+    }, 5000);
+  }
+  
+  // Stop the interval when a session is selected
+  $: if (selectedSession && refreshInterval) {
+    clearInterval(refreshInterval);
+    refreshInterval = null;
+  } else if (!selectedSession && visible && user && !refreshInterval) {
+    startRefreshInterval();
+  }
+  
+  // Clean up the interval when the component is destroyed
+  onDestroy(() => {
+    if (refreshInterval) {
+      clearInterval(refreshInterval);
+      refreshInterval = null;
+    }
+  });
 
   function handleKeydown(e: KeyboardEvent) {
     if (e.key === 'Enter' && !e.shiftKey) {
