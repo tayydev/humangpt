@@ -35,9 +35,13 @@
   }
 
   onMount(async () => {
-    // Check if a session UUID is present in the URL
+    // Check URL parameters
     const params = new URLSearchParams(window.location.search);
     const sessionUuid = params.get('session');
+    const inProfilePage = params.get('profile') === 'true';
+    
+    // Set profile page state based on URL
+    showProfilePage = inProfilePage;
 
     if(!sessionUuid) {
       //make a guest user
@@ -65,8 +69,10 @@
             scrollChatToBottom(); // Scroll to bottom when popup appears
           }, 500);
 
-          // Start the refresh timer for the current chat
-          startRefreshTimer();
+          // Only start the refresh timer if we're not in profile view
+          if (!showProfilePage) {
+            startRefreshTimer();
+          }
         }
       } catch (error) {
         console.error('Failed to load session:', error);
@@ -84,8 +90,8 @@
   function newChatSplashScreen() {
     // Return to splash screen by setting currentChat to null
     currentChat = null;
-    // Remove session from URL
-    updateUrlWithSession(null);
+    // Update URL to remove session but preserve profile state
+    updateUrlWithSession(null, showProfilePage);
 
     // Reset status when returning to splash screen
     isAwaitingResponse = false;
@@ -97,8 +103,8 @@
   function selectChat(event: CustomEvent<Session>) {
     didCloseAwaiting = false;
     currentChat = event.detail;
-    // Update URL with selected session UUID
-    updateUrlWithSession(event.detail.uuid);
+    // Update URL with selected session UUID, preserving profile state
+    updateUrlWithSession(event.detail.uuid, showProfilePage);
 
     // Update status when switching to a different chat
     updateCurrentChatStatus();
@@ -147,13 +153,23 @@
     }
   }
 
-  function updateUrlWithSession(sessionUuid: string | null) {
+  function updateUrlWithSession(sessionUuid: string | null, inProfilePage: boolean = false) {
     const url = new URL(window.location.href);
+    
+    // Update session parameter
     if (sessionUuid) {
       url.searchParams.set('session', sessionUuid);
     } else {
       url.searchParams.delete('session');
     }
+    
+    // Update profile page parameter
+    if (inProfilePage) {
+      url.searchParams.set('profile', 'true');
+    } else {
+      url.searchParams.delete('profile');
+    }
+    
     window.history.pushState({}, '', url.toString());
   }
 
@@ -194,9 +210,9 @@
       // Scroll to bottom when new messages arrive
       scrollChatToBottom();
 
-      // Update URL with new session UUID
+      // Update URL with new session UUID, preserving profile state
       if (result.uuid) {
-        updateUrlWithSession(result.uuid);
+        updateUrlWithSession(result.uuid, showProfilePage);
       }
 
       // Start or restart the refresh timer for the current chat
@@ -276,6 +292,8 @@
     showProfilePage = true;
     // Stop refreshing when navigating away from chat
     stopRefreshTimer();
+    // Update URL to reflect profile page state
+    updateUrlWithSession(currentChat?.uuid || null, true);
   }
   
   function navigateToChat() {
@@ -284,6 +302,8 @@
     if (currentChat) {
       startRefreshTimer();
     }
+    // Update URL to reflect chat page state
+    updateUrlWithSession(currentChat?.uuid || null, false);
   }
 </script>
 
