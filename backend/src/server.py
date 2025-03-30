@@ -47,3 +47,7 @@ async def get_unanswered(answerer_id: str) -> list[Session]:
 @app.post("/guest_user")
 async def guest() -> UserPublic:
     return create_temp_user()
+
+@app.get("/get_user/{uuid}")
+async def get_user(uuid: str):
+    return get_user_info(uuid)

@@ -2,6 +2,8 @@ import random
 from typing import Optional
 from uuid import uuid4
 
+from fastapi import HTTPException
+
 from data import *
 
 session_store: dict[str, Session] = {}
@@ -36,4 +38,7 @@ def create_temp_user() -> UserPublic:
     return user_store[guest_id].to_pub()
 
 def get_user_info(uuid: str) -> UserPublic:
-    return user_store[uuid].to_pub()
+    try:
+        return user_store[uuid].to_pub()
+    except KeyError:
+        raise HTTPException(status_code=404, detail=f"User with ID '{uuid}' not found")
