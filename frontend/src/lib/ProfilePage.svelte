@@ -104,12 +104,14 @@
   }
   
   header {
-    padding: 20px max(40px, 10%);
+    padding: 15px max(40px, 10%);
     display: flex;
     align-items: center;
     border-bottom: 1px solid rgba(255, 255, 255, 0.08);
     background-color: rgba(40, 40, 48, 0.3);
     width: 100%;
+    height: 56px;
+    box-sizing: border-box;
   }
   
   .back-button {
@@ -122,7 +124,8 @@
     cursor: pointer;
     padding: 8px;
     border-radius: 4px;
-    margin-right: 20px;
+    margin-right: 16px;
+    font-size: 14px;
   }
   
   .back-button:hover {
@@ -131,7 +134,7 @@
   
   h1 {
     margin: 0;
-    font-size: 20px;
+    font-size: 18px;
     color: white;
     font-weight: 500;
   }
