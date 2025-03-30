@@ -57,7 +57,11 @@
 
 <style>
   .messages-container {
-    flex: 1;
+    position: absolute;
+    top: 56px; /* Height of the header */
+    bottom: 77px; /* Height of the input container */
+    left: 0;
+    right: 0;
     overflow-y: auto;
     padding: 16px;
     display: flex;
@@ -72,6 +76,8 @@
       overflow-x: hidden;
       -webkit-box-sizing: border-box;
       box-sizing: border-box;
+      /* Fix iOS scrolling */
+      -webkit-overflow-scrolling: touch;
     }
   }
 

@@ -24,6 +24,10 @@
 
 <style>
   .chat-header {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
     padding: 15px 16px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.08);
     display: flex;
@@ -31,6 +35,8 @@
     align-items: center;
     height: 56px;
     box-sizing: border-box;
+    background-color: #343541;
+    z-index: 10;
   }
 
   .title-container {
