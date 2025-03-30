@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from service import *
 from data import *
-from service import get_or_create
+from service import get_or_create_session
 import random
 
 app = FastAPI()
@@ -20,7 +20,7 @@ app.add_middleware(
 
 @app.post("/submit")
 async def submit(msg: str, user_id: str, is_answer: bool, uuid: Optional[str] = None) -> Session:
-    session = get_or_create(uuid, title=msg, user_id=user_id)
+    session = get_or_create_session(uuid, title=msg, user_id=user_id)
     user = get_user_info(user_id)
     session.content.append(Message(name=user.display_name, pfp_url=user.pfp_url, content=msg, is_answer=is_answer, user_id=user_id))  # append new content
     session.updated_timestamp = datetime.now()
@@ -29,12 +29,12 @@ async def submit(msg: str, user_id: str, is_answer: bool, uuid: Optional[str] = 
 
 @app.get("/session/{uuid}")
 async def get_session(uuid: str):
-    return get_only(uuid)
+    return get_session(uuid)
 
 
 @app.get("/unanswered_sessions")
 async def get_unanswered(answerer_id: str) -> list[Session]:
-    sessions = get_sessions()
+    sessions = get_sessions_list()
     unanswered = []
     for session in sessions:
         if not session.content[-1].is_answer and not session.user_id == answerer_id:
