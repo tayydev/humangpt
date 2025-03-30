@@ -31,6 +31,21 @@
     transition: all 0.2s ease;
     width: 40px;
     height: 40px;
+    min-width: 40px;
+  }
+  
+  @media (max-width: 480px) {
+    .profile-button {
+      padding: 6px;
+      width: 36px;
+      height: 36px;
+      min-width: 36px;
+    }
+    
+    .profile-button svg {
+      width: 22px;
+      height: 22px;
+    }
   }
   
   .profile-button:hover {

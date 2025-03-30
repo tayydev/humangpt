@@ -56,6 +56,7 @@
   .header-actions {
     display: flex;
     align-items: center;
+    min-width: 40px; /* Ensure space for profile button */
   }
   
   @media (max-width: 768px) {
@@ -66,17 +67,16 @@
     h2 {
       font-size: 1rem;
     }
+    
+    .chat-header {
+      padding-left: 48px;
+      padding-right: 12px; /* Ensure profile button doesn't get cut off */
+    }
   }
   
   @media (max-width: 480px) {
     .title-container {
       max-width: 40%;
-    }
-  }
-  
-  @media (max-width: 768px) {
-    .chat-header {
-      padding-left: 48px;
     }
   }
 </style>

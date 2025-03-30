@@ -79,7 +79,7 @@
   }
 
   header {
-    padding: 15px max(40px, 10%);
+    padding: 15px max(20px, 5%);
     display: flex;
     align-items: center;
     border-bottom: 1px solid rgba(255, 255, 255, 0.08);
@@ -101,6 +101,7 @@
     border-radius: 4px;
     margin-right: 16px;
     font-size: 14px;
+    white-space: nowrap;
   }
 
   .back-button:hover {
@@ -112,10 +113,33 @@
     font-size: 18px;
     color: white;
     font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  @media (max-width: 380px) {
+    header {
+      padding: 15px 10px;
+    }
+    
+    .back-button {
+      margin-right: 8px;
+      padding: 6px;
+    }
+    
+    .back-button svg {
+      width: 20px;
+      height: 20px;
+    }
+    
+    h1 {
+      font-size: 16px;
+    }
   }
 
   .profile-content {
-    padding: 0 max(40px, 10%);
+    padding: 0 max(20px, 5%);
     overflow-y: auto;
     flex: 1;
     max-width: 1200px;
@@ -137,6 +161,23 @@
     display: flex;
     flex-direction: column;
     justify-content: center;
+  }
+  
+  @media (max-width: 480px) {
+    .profile-header {
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 15px;
+    }
+    
+    .profile-info {
+      align-items: center;
+    }
+    
+    .account-info {
+      text-align: center;
+    }
   }
 
   .profile-image {
@@ -186,6 +227,9 @@
     color: #8e8ea0;
     font-family: monospace;
     margin: 0;
+    word-break: break-all;
+    font-size: 13px;
+    max-width: 100%;
   }
 
   .divider {
