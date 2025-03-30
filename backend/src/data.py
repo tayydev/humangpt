@@ -18,7 +18,7 @@ class Session(BaseModel):
     user_id: str  # uuid
     title: str
     created_at: str = datetime.now().strftime("%Y-%m-%d")
-    created_timestamp: datetime = datetime.now()
+    updated_timestamp: datetime = datetime.now()
     uuid: str
     content: list[Message] = []
 
