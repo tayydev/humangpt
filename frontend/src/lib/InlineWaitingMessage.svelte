@@ -56,7 +56,7 @@
   function backToQuestionsList() {
     selectedSession = null;
     responseText = '';
-    
+
     // Restart the refresh interval when returning to the questions list
     loadUnansweredSessions();
     startRefreshInterval();
@@ -86,7 +86,7 @@
     } finally {
       isSubmitting = false;
     }
-  }
+}
 
   async function loadUnansweredSessions() {
     try {
@@ -105,20 +105,20 @@
   $: if (user && visible) {
     (async () => {
       await loadUnansweredSessions();
-      
+
       // Start the refresh interval if not already running
       if (!refreshInterval && !selectedSession) {
         startRefreshInterval();
       }
     })();
   }
-  
+
   function startRefreshInterval() {
     // Clear any existing interval first
     if (refreshInterval) {
       clearInterval(refreshInterval);
     }
-    
+
     // Set new interval to reload every 5 seconds (5000 ms)
     refreshInterval = setInterval(() => {
       if (!selectedSession) {
@@ -126,7 +126,7 @@
       }
     }, 5000);
   }
-  
+
   // Stop the interval when a session is selected
   $: if (selectedSession && refreshInterval) {
     clearInterval(refreshInterval);
@@ -134,7 +134,7 @@
   } else if (!selectedSession && visible && user && !refreshInterval) {
     startRefreshInterval();
   }
-  
+
   // Clean up the interval when the component is destroyed
   onDestroy(() => {
     if (refreshInterval) {

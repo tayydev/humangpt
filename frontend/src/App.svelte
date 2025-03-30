@@ -19,6 +19,9 @@
   
   // Navigation state
   let showProfilePage = false;
+  
+  // Mobile sidebar state
+  let isSidebarOpen = window?.innerWidth > 768;
 
   // We'll stop using these global states and instead check per-chat status
   let isAwaitingResponse = false;
@@ -36,6 +39,12 @@
   }
 
   onMount(async () => {
+    // Initialize sidebar state based on screen width
+    isSidebarOpen = window.innerWidth > 768;
+    
+    // Add window resize listener
+    window.addEventListener('resize', handleResize);
+    
     // Check URL parameters
     const params = new URLSearchParams(window.location.search);
     const sessionUuid = params.get('session');
@@ -83,9 +92,17 @@
     console.log("mount finished", showWaitingMessage)
   });
 
+  // Handle window resize
+  function handleResize() {
+    // Set sidebar to open by default on desktop, closed by default on mobile
+    isSidebarOpen = window.innerWidth > 768;
+  }
+
   // Clean up timer on component destroy
   onDestroy(() => {
     stopRefreshTimer();
+    // Remove resize listener
+    window.removeEventListener('resize', handleResize);
   });
 
   function newChatSplashScreen() {
@@ -306,18 +323,30 @@
     // Update URL to reflect chat page state
     updateUrlWithSession(currentChat?.uuid || null, false);
   }
+  
+  function toggleSidebar() {
+    isSidebarOpen = !isSidebarOpen;
+  }
 </script>
 
 {#if showProfilePage}
   <ProfilePage {user} on:back={navigateToChat} />
 {:else}
   <div class="chat-container">
+    <button class="menu-toggle" on:click={toggleSidebar}>
+      <span class="menu-icon">≡</span>
+    </button>
+    
     <Sidebar
             {chats}
             {currentChat}
+            {isSidebarOpen}
             on:newchat={newChatSplashScreen}
             on:select={selectChat}
+            on:toggleSidebar={toggleSidebar}
     />
+    
+    <div class="overlay" class:active={isSidebarOpen} on:click={toggleSidebar}></div>
   
     <main class="chat-main">
       {#if currentChat}
@@ -365,6 +394,7 @@
     height: 100vh;
     width: 100%;
     overflow: hidden;
+    position: relative;
   }
 
   .chat-main {
@@ -373,6 +403,50 @@
     flex-direction: column;
     background-color: #343541;
     color: white;
+  }
+  
+  .menu-toggle {
+    display: none;
+    position: fixed;
+    top: 12px;
+    left: 12px;
+    z-index: 1001;
+    background-color: #10a37f;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    width: 36px;
+    height: 36px;
+    font-size: 20px;
+    cursor: pointer;
+    padding: 0;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .menu-icon {
+    line-height: 1;
+  }
+  
+  .overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+  }
+  
+  .overlay.active {
+    display: block;
+  }
+  
+  @media (max-width: 768px) {
+    .menu-toggle {
+      display: flex;
+    }
   }
 
   .profile-header-container {
