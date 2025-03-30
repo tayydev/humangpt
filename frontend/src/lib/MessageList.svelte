@@ -17,13 +17,16 @@
   const dispatch = createEventDispatcher();
   let messagesContainer: HTMLElement;
 
-  // Scroll to bottom of messages container
+  // Scroll to bottom of messages container with better visibility for waiting message
   function scrollToBottom() {
     if (messagesContainer) {
-      messagesContainer.scrollTo({
-        top: messagesContainer.scrollHeight,
-        behavior: 'smooth'
-      });
+      // Delayed scroll to ensure waiting message is rendered
+      setTimeout(() => {
+        messagesContainer.scrollTo({
+          top: messagesContainer.scrollHeight,
+          behavior: 'smooth'
+        });
+      }, 10);
     }
   }
 
@@ -42,16 +45,17 @@
     {#each messages as message}
       <MessageComponent {message} />
     {/each}
-    <!-- No longer using LoadingIndicator in the message list -->
-  </div>
-
-  <div class="waiting-message-container">
-    <InlineWaitingMessage
-      visible={showWaitingMessage}
-      skipAnimation={skipWaitingAnimation}
-      user={user}
-      on:close={handleCloseWaitingMessage}
-    />
+    <!-- Include waiting message as part of the scrollable content -->
+    {#if showWaitingMessage}
+      <div class="waiting-message-container">
+        <InlineWaitingMessage
+          visible={true}
+          skipAnimation={skipWaitingAnimation}
+          user={user}
+          on:close={handleCloseWaitingMessage}
+        />
+      </div>
+    {/if}
   </div>
 </div>
 
@@ -79,17 +83,16 @@
     display: flex;
     flex-direction: column;
     gap: 24px;
-    margin-bottom: 16px;
+    width: 100%;
   }
 
   /* Loading indicator is now included directly in messages-list */
 
   .waiting-message-container {
-    margin-top: auto;
     display: flex;
     justify-content: center;
     width: 100%;
-    position: relative;
+    margin: 16px 0;
     /* Fix iOS width issues */
     max-width: 100vw;
     overflow-x: hidden;
