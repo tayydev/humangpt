@@ -150,7 +150,7 @@
       <!-- List of questions to answer -->
       <div class="questions-container" in:slide={{duration: 200}}>
         {#if showSubmitSuccess}
-          <div class="success-message" in:fade={{duration: 200}}>
+          <div class="success-message" in:fade={{duration: 200}} out:fade={{duration: 300}}>
             Thanks for helping out! Your response has been submitted.
           </div>
         {/if}

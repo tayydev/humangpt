@@ -235,7 +235,7 @@
           <div class="centered-input">
             <WelcomeInput on:submit={handleMessageSubmit} />
           </div>
-          <p class="description-text">When you ask HumanGPT a question, a real human being will answer. Please be considerate of your fellow humans.</p>
+          <p class="description-text">When you ask HumanGPT a question, a real human being will answer. Please be considerate of your fellow meat sacks.</p>
         </div>
       </div>
     {/if}
