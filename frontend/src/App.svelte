@@ -333,8 +333,8 @@
   <ProfilePage {user} on:back={navigateToChat} />
 {:else}
   <div class="chat-container">
-    <button class="menu-toggle" on:click={toggleSidebar}>
-      <span class="menu-icon">≡</span>
+    <button class="menu-toggle" on:click={toggleSidebar} aria-label="Toggle sidebar">
+      <span class="menu-icon">☰</span>
     </button>
     
     <Sidebar
@@ -408,20 +408,25 @@
   .menu-toggle {
     display: none;
     position: fixed;
-    top: 12px;
-    left: 12px;
+    top: 10px;
+    left: 10px;
     z-index: 1001;
-    background-color: #10a37f;
+    background-color: transparent;
     color: white;
     border: none;
     border-radius: 4px;
     width: 36px;
     height: 36px;
-    font-size: 20px;
+    font-size: 22px;
     cursor: pointer;
     padding: 0;
     align-items: center;
     justify-content: center;
+    transition: background-color 0.2s ease;
+  }
+  
+  .menu-toggle:hover {
+    background-color: rgba(255, 255, 255, 0.1);
   }
   
   .menu-icon {
@@ -446,6 +451,15 @@
   @media (max-width: 768px) {
     .menu-toggle {
       display: flex;
+    }
+    
+    .chat-main {
+      padding-left: 0;
+    }
+    
+    /* Add spacing on the welcome screen for the menu button */
+    .profile-header-container {
+      padding-left: 48px;
     }
   }
 

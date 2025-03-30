@@ -14,7 +14,9 @@
 </script>
 
 <div class="chat-header">
-  <h2>{title}</h2>
+  <div class="title-container">
+    <h2 class="title-text" title={title}>{title}</h2>
+  </div>
   <div class="header-actions">
     <ProfileButton {user} on:profileClick={handleProfileClick} />
   </div>
@@ -31,14 +33,50 @@
     box-sizing: border-box;
   }
 
+  .title-container {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    max-width: 70%;
+    margin: 0 auto;
+  }
+
   h2 {
     margin: 0;
-    flex: 1;
     text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+    font-size: 1.1rem;
   }
   
   .header-actions {
     display: flex;
     align-items: center;
+  }
+  
+  @media (max-width: 768px) {
+    .title-container {
+      max-width: 50%;
+    }
+    
+    h2 {
+      font-size: 1rem;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    .title-container {
+      max-width: 40%;
+    }
+  }
+  
+  @media (max-width: 768px) {
+    .chat-header {
+      padding-left: 48px;
+    }
   }
 </style>
