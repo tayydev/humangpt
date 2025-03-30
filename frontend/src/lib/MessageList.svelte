@@ -73,6 +73,11 @@
   /* iOS-specific adjustments */
   @supports (-webkit-touch-callout: none) {
     .messages-container {
+      position: absolute;
+      top: 56px; /* Header height */
+      bottom: 77px; /* Input height */
+      left: 0;
+      right: 0;
       overflow-x: hidden;
       -webkit-box-sizing: border-box;
       box-sizing: border-box;
@@ -82,6 +87,7 @@
       overscroll-behavior: contain;
       /* Improve performance */
       -webkit-transform: translateZ(0);
+      padding-bottom: env(safe-area-inset-bottom, 16px); /* Account for the home indicator area */
     }
   }
 

@@ -102,8 +102,11 @@
   /* Safari-specific styles */
   @supports (-webkit-touch-callout: none) {
     .input-container {
-      position: relative;
-      z-index: 5;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 50;
     }
   }
 
