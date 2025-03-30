@@ -23,6 +23,7 @@ async def submit(msg: str, user_id: str, is_answer: bool, uuid: Optional[str] = 
     session = get_or_create(uuid, title=msg, user_id=user_id)
     user = get_user_info(user_id)
     session.content.append(Message(name=user.display_name, pfp_url=user.pfp_url, content=msg, is_answer=is_answer, user_id=user_id))  # append new content
+    session.updated_timestamp = datetime.now()
     return write_session(session)
 
 
@@ -38,7 +39,7 @@ async def get_unanswered(answerer_id: str) -> list[Session]:
     for session in sessions:
         if not session.content[-1].is_answer and not session.user_id == answerer_id:
             unanswered.append(session)
-    unanswered = sorted(unanswered, key=lambda s: s.created_timestamp)
+    unanswered = sorted(unanswered, key=lambda s: s.updated_timestamp)
     unanswered = unanswered[:3]
     random.shuffle(unanswered)
     return unanswered
