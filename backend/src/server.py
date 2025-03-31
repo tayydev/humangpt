@@ -4,7 +4,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from service import *
 from data import *
 from service import get_or_create_session
-import random
 
 app = FastAPI()
 
@@ -21,7 +20,7 @@ app.add_middleware(
 @app.post("/submit")
 async def submit(msg: str, user_id: str, is_answer: bool, uuid: Optional[str] = None) -> Session:
     session = get_or_create_session(uuid, title=msg, user_id=user_id)
-    user = get_user_info(user_id)
+    user = get_user(user_id)
     session.content.append(Message(name=user.display_name, pfp_url=user.pfp_url, content=msg, is_answer=is_answer, user_id=user_id))  # append new content
     session.updated_timestamp = datetime.now()
     return write_session(session)
@@ -32,26 +31,16 @@ async def session_endpoint(uuid: str):
     return get_session(uuid)
 
 
-@app.get("/unanswered_sessions")
-async def get_unanswered(answerer_id: str) -> list[Session]:
-    sessions = get_sessions_list()
-    unanswered = []
-    for session in sessions:
-        if not session.content[-1].is_answer and not session.user_id == answerer_id:
-            unanswered.append(session)
-    unanswered = sorted(unanswered, key=lambda s: s.updated_timestamp)
-    unanswered = unanswered[:3]
-    random.shuffle(unanswered)
-    return unanswered
+@app.get("/unanswered-sessions")
+async def unanswered_sessions(answerer_id: str) -> list[Session]:
+    return sorted(
+        [s for s in get_sessions_list() if not s.content[-1].is_answer and s.user_id != answerer_id],
+        key=lambda s: s.updated_timestamp
+    )
 
 @app.get("/all-sessions")
-async def get_all() -> list[Session]:
-    sessions = get_sessions_list()
-    all_sessions = []
-    for session in sessions:
-        if session.content[-1].is_answer:
-            all_sessions.append(session)
-    return all_sessions
+async def all_sessions() -> list[Session]:
+    return get_sessions_list()
 
 @app.post("/guest_user")
 async def guest() -> UserPublic:
@@ -59,4 +48,4 @@ async def guest() -> UserPublic:
 
 @app.get("/get_user/{uuid}")
 async def get_user(uuid: str):
-    return get_user_info(uuid)
+    return get_user(uuid)
