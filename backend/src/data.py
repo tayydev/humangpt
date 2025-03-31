@@ -22,6 +22,22 @@ class Session(BaseModel):
     uuid: str
     content: list[Message] = []
 
+    def to_dto(self):
+        return SessionDTO(
+            uuid=self.uuid,
+            user_id=self.user_id,
+            title=self.title,
+            created_at=self.created_at,
+            updated_timestamp=self.updated_timestamp
+        )
+
+class SessionDTO(BaseModel):
+    uuid: str
+    user_id: str  # uuid
+    title: str
+    created_at: str = datetime.now().strftime("%Y-%m-%d")
+    updated_timestamp: datetime = datetime.now()
+
 class UserPublic(BaseModel):
     uuid: str
     display_name: str
@@ -31,6 +47,7 @@ class UserSecret(BaseModel):
     uuid: str
     display_name: str
     pfp_url: str
+    ip: str
     # todo: google secret
 
     # returns everything that isn't secret about this person
