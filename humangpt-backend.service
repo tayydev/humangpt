@@ -1,0 +1,15 @@
+[Unit]
+Description=HumanGPT Backend
+After=network.target
+
+[Service]
+Type=simple
+User=tayydev
+WorkingDirectory=/home/tayydev/humangpt/backend
+ExecStartPre=/usr/bin/git -C /home/tayydev/humangpt pull
+ExecStart=/home/tayydev/.local/bin/poetry run python src --host 0.0.0.0
+Restart=on-failure
+RestartSec=5s
+
+[Install]
+WantedBy=multi-user.target
