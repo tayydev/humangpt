@@ -35,22 +35,30 @@ async def all_unanswered_sessions(answerer_id: str) -> list[Session]:
 async def all_sessions() -> list[Session]:
     return get_sessions_list()
 
-@app.post("/guest_user")
+@app.post("/guest-user")
 async def guest() -> UserPublic:
     return create_temp_user()
 
-@app.get("/get_user")
+@app.get("/get-user")
 async def get_user(uuid: str):
     return get_user(uuid)
 
+@app.post("/create-session")
+async def create_session(title: str, user_id: str) -> SessionDTO:
+    return write_session(get_or_create_session(None, title, user_id)).to_dto()
+
 # websockets
 @app.websocket("/ws/session")
-async def ws_session(websocket: WebSocket, session_id: str, client_id: str):
+async def ws_session(websocket: WebSocket, session_id: str):
+    print("New session requested!")
+
     await socket_manager.connect(websocket)
 
     try:
         # catch-up
         await catch_up_socket(websocket, session_id)
+
+        print("Session got caught up!")
 
         while True:
             data = await websocket.receive_json()

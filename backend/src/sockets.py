@@ -3,7 +3,6 @@ from starlette.websockets import WebSocket
 from data import *
 from service import *
 
-
 async def catch_up_socket(socket: WebSocket, session_id: str):
     all_messages = get_session(session_id).content
     await socket.send_json([m.model_dump_json() for m in all_messages])
