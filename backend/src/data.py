@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 
 from pydantic import BaseModel
@@ -18,7 +18,7 @@ class Session(BaseModel):
     user_id: str  # uuid
     title: str
     created_at: str = datetime.now().strftime("%Y-%m-%d")
-    updated_timestamp: datetime = datetime.now()
+    updated_timestamp: datetime = datetime.now(timezone.utc)
     uuid: str
     content: list[Message] = []
 

@@ -25,23 +25,14 @@
   }
 
   function getMinutesAgo(isoString: string): number {
-    // Parse the UTC ISO string
+    // Parse the ISO string directly - this handles UTC correctly
     const time = new Date(isoString);
 
-    // Get current time in UTC
+    // Get current time - no need to manually create UTC
     const now = new Date();
-    const nowUtc = new Date(
-            now.getUTCFullYear(),
-            now.getUTCMonth(),
-            now.getUTCDate(),
-            now.getUTCHours(),
-            now.getUTCMinutes(),
-            now.getUTCSeconds(),
-            now.getUTCMilliseconds()
-    );
 
     // Calculate difference in milliseconds
-    const diffMs = nowUtc.getTime() - time.getTime();
+    const diffMs = now.getTime() - time.getTime();
 
     // Convert to minutes
     return Math.floor(diffMs / 60000);
@@ -86,7 +77,7 @@
     } finally {
       isSubmitting = false;
     }
-}
+  }
 
   async function loadUnansweredSessions() {
     try {
@@ -152,96 +143,96 @@
 </script>
 
 {#if visible}
-<div class="waiting-message" class:no-animation={skipAnimation}
-  in:fade={{duration: skipAnimation ? 0 : 300}}
-  out:fade={{duration: skipAnimation ? 0 : 300}}>
+  <div class="waiting-message" class:no-animation={skipAnimation}
+       in:fade={{duration: skipAnimation ? 0 : 300}}
+       out:fade={{duration: skipAnimation ? 0 : 300}}>
 
-  <div class="message-header">
-    {#if selectedSession}
-      <h3>
-        <button class="back-button" on:click={backToQuestionsList}>
-          <svg viewBox="0 0 24 24" width="16" height="16">
-            <path fill="currentColor" d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
-          </svg>
-        </button>
-        Responding to question
-      </h3>
-    {:else}
-      <h3>Hey there! While you wait for someone to answer your question, consider helping out a fellow human.</h3>
-    {/if}
+    <div class="message-header">
+      {#if selectedSession}
+        <h3>
+          <button class="back-button" on:click={backToQuestionsList}>
+            <svg viewBox="0 0 24 24" width="16" height="16">
+              <path fill="currentColor" d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
+            </svg>
+          </button>
+          Responding to question
+        </h3>
+      {:else}
+        <h3>Hey there! While you wait for someone to answer your question, consider helping out a fellow human.</h3>
+      {/if}
 
-    <button class="close-button" on:click={closePopup} aria-label="Close">
-      <svg viewBox="0 0 24 24" width="18" height="18">
-        <path fill="currentColor" d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"></path>
-      </svg>
-    </button>
-  </div>
+      <button class="close-button" on:click={closePopup} aria-label="Close">
+        <svg viewBox="0 0 24 24" width="18" height="18">
+          <path fill="currentColor" d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"></path>
+        </svg>
+      </button>
+    </div>
 
-  <div class="content-container">
-    {#if selectedSession}
-      <!-- Question details and response area -->
-      <div class="question-details" in:slide={{duration: 200}}>
-        <div class="question-title">{selectedSession.title}</div>
+    <div class="content-container">
+      {#if selectedSession}
+        <!-- Question details and response area -->
+        <div class="question-details" in:slide={{duration: 200}}>
+          <div class="question-title">{selectedSession.title}</div>
 
-        <!-- Show conversation context -->
-        <div class="conversation-context">
-          {#each selectedSession.content as message}
-            <div class="context-message {message.is_answer ? 'answer' : 'question'}">
-              <div class="message-author">{message.name}</div>
-              <div class="message-text">{message.content}</div>
-            </div>
-          {/each}
-        </div>
+          <!-- Show conversation context -->
+          <div class="conversation-context">
+            {#each selectedSession.content as message}
+              <div class="context-message {message.is_answer ? 'answer' : 'question'}">
+                <div class="message-author">{message.name}</div>
+                <div class="message-text">{message.content}</div>
+              </div>
+            {/each}
+          </div>
 
-        <!-- Response textarea and submit button -->
-        <div class="response-area">
+          <!-- Response textarea and submit button -->
+          <div class="response-area">
           <textarea
-            bind:value={responseText}
-            placeholder="Type your response here..."
-            rows="3"
-            on:keydown={handleKeydown}
-            disabled={isSubmitting}
+                  bind:value={responseText}
+                  placeholder="Type your response here..."
+                  rows="3"
+                  on:keydown={handleKeydown}
+                  disabled={isSubmitting}
           ></textarea>
 
-          <button
-            class="submit-button"
-            on:click={submitResponse}
-            disabled={!responseText.trim() || isSubmitting}
-          >
-            {isSubmitting ? 'Sending...' : 'Submit Response'}
-          </button>
+            <button
+                    class="submit-button"
+                    on:click={submitResponse}
+                    disabled={!responseText.trim() || isSubmitting}
+            >
+              {isSubmitting ? 'Sending...' : 'Submit Response'}
+            </button>
+          </div>
         </div>
-      </div>
-    {:else}
-      <!-- List of questions to answer -->
-      <div class="questions-container" in:slide={{duration: 200}}>
-        {#if showSubmitSuccess}
-          <div class="success-message" in:fade={{duration: 200}} out:fade={{duration: 300}}>
-            Thanks for helping out! Your response has been submitted.
-          </div>
-        {/if}
-
-        {#if sessions.length === 0}
-          <div class="no-questions-message">
-            There are no questions waiting for answers right now. Check back later!
-          </div>
-        {:else}
-          {#each sessions as session}
-            <div class="question-card">
-              <div class="question-header">
-                <div class="question-content">{session.title}</div>
-                <button class="help-button" on:click={() => selectSession(session)}>Answer</button>
-              </div>
-              <div class="question-metadata">
-                <span class="time-ago">{getMinutesAgo(session.updated_timestamp)} minutes ago</span>
-              </div>
+      {:else}
+        <!-- List of questions to answer -->
+        <div class="questions-container" in:slide={{duration: 200}}>
+          {#if showSubmitSuccess}
+            <div class="success-message" in:fade={{duration: 200}} out:fade={{duration: 300}}>
+              Thanks for helping out! Your response has been submitted.
             </div>
-          {/each}
-        {/if}
-      </div>
-    {/if}
+          {/if}
+
+          {#if sessions.length === 0}
+            <div class="no-questions-message">
+              There are no questions waiting for answers right now. Check back later!
+            </div>
+          {:else}
+            {#each sessions as session}
+              <div class="question-card">
+                <div class="question-header">
+                  <div class="question-content">{session.title}</div>
+                  <button class="help-button" on:click={() => selectSession(session)}>Answer</button>
+                </div>
+                <div class="question-metadata">
+                  <span class="time-ago">{getMinutesAgo(session.updated_timestamp)} minutes ago</span>
+                </div>
+              </div>
+            {/each}
+          {/if}
+        </div>
+      {/if}
+    </div>
   </div>
-</div>
 {/if}
 
 <style>
@@ -250,7 +241,7 @@
     -webkit-text-size-adjust: 100%;
     text-size-adjust: 100%;
   }
-  
+
   .waiting-message {
     margin: 12px 0;
     background-color: #343541;
@@ -263,7 +254,7 @@
     -webkit-box-sizing: border-box;
     box-sizing: border-box;
   }
-  
+
   /* iOS-specific adjustments */
   @supports (-webkit-touch-callout: none) {
     .waiting-message {
@@ -341,7 +332,7 @@
     box-sizing: border-box;
     -webkit-box-sizing: border-box;
   }
-  
+
   /* iOS-specific adjustments */
   @supports (-webkit-touch-callout: none) {
     .content-container {
