@@ -16,10 +16,10 @@
   let currentChat: Session | null = null;
   let showWaitingMessage = false;
   let skipWaitingAnimation = false;
-  
+
   // Navigation state
   let showProfilePage = false;
-  
+
   // Mobile sidebar state - default false for SSR, will be set correctly on mount
   let isSidebarOpen = false;
 
@@ -43,15 +43,15 @@
     setTimeout(() => {
       isSidebarOpen = window.innerWidth > 768;
     }, 0);
-    
+
     // Add window resize listener
     window.addEventListener('resize', handleResize);
-    
+
     // Check URL parameters
     const params = new URLSearchParams(window.location.search);
     const sessionUuid = params.get('session');
     const inProfilePage = params.get('profile') === 'true';
-    
+
     // Set profile page state based on URL
     showProfilePage = inProfilePage;
 
@@ -64,7 +64,7 @@
     if (sessionUuid) {
       try {
         // Call the API to get the session by UUID
-        const response = await apiClient.getSessionSessionUuidGet(sessionUuid);
+        const response = await apiClient.sessionEndpointSessionUuidGet(sessionUuid);
         if (response.data) {
           currentChat = response.data;
           chats = deduplicateChats(response.data, chats);
@@ -138,7 +138,7 @@
     if (!currentChat || !currentChat.uuid) return;
 
     try {
-      const response = await apiClient.getSessionSessionUuidGet(currentChat.uuid);
+      const response = await apiClient.sessionEndpointSessionUuidGet(currentChat.uuid);
       if (response.data) {
         // Update current chat with fresh data
         currentChat = response.data;
@@ -175,21 +175,21 @@
 
   function updateUrlWithSession(sessionUuid: string | null, inProfilePage: boolean = false) {
     const url = new URL(window.location.href);
-    
+
     // Update session parameter
     if (sessionUuid) {
       url.searchParams.set('session', sessionUuid);
     } else {
       url.searchParams.delete('session');
     }
-    
+
     // Update profile page parameter
     if (inProfilePage) {
       url.searchParams.set('profile', 'true');
     } else {
       url.searchParams.delete('profile');
     }
-    
+
     window.history.pushState({}, '', url.toString());
   }
 
@@ -307,7 +307,7 @@
       }
     }, 100);
   }
-  
+
   function navigateToProfile() {
     showProfilePage = true;
     // Stop refreshing when navigating away from chat
@@ -315,7 +315,7 @@
     // Update URL to reflect profile page state
     updateUrlWithSession(currentChat?.uuid || null, true);
   }
-  
+
   function navigateToChat() {
     showProfilePage = false;
     // Restart refreshing when returning to chat
@@ -325,7 +325,7 @@
     // Update URL to reflect chat page state
     updateUrlWithSession(currentChat?.uuid || null, false);
   }
-  
+
   function toggleSidebar() {
     isSidebarOpen = !isSidebarOpen;
   }
@@ -340,7 +340,7 @@
     <button class="menu-toggle" on:click={toggleSidebar} aria-label="Toggle sidebar">
       <span class="menu-icon">☰</span>
     </button>
-    
+
     <Sidebar
             {chats}
             {currentChat}
@@ -349,15 +349,15 @@
             on:select={selectChat}
             on:toggleSidebar={toggleSidebar}
     />
-    
+
     <div class="overlay" class:active={isSidebarOpen} on:click={toggleSidebar}></div>
-  
+
     <main class="chat-main">
       {#if currentChat}
-        <ChatHeader 
-          title={currentChat.title || ""} 
-          {user} 
-          on:profileClick={navigateToProfile} 
+        <ChatHeader
+          title={currentChat.title || ""}
+          {user}
+          on:profileClick={navigateToProfile}
         />
         <MessageList
           messages={currentChat.content || []}
@@ -410,14 +410,14 @@
     position: relative;
     overflow: hidden;
   }
-  
+
   /* Safari-specific fixes */
   @supports (-webkit-touch-callout: none) {
     .chat-main {
       height: -webkit-fill-available;
     }
   }
-  
+
   .menu-toggle {
     display: none;
     position: fixed;
@@ -437,15 +437,15 @@
     justify-content: center;
     transition: background-color 0.2s ease;
   }
-  
+
   .menu-toggle:hover {
     background-color: rgba(255, 255, 255, 0.1);
   }
-  
+
   .menu-icon {
     line-height: 1;
   }
-  
+
   .overlay {
     display: none;
     position: fixed;
@@ -456,27 +456,27 @@
     background-color: rgba(0, 0, 0, 0.5);
     z-index: 999;
   }
-  
+
   .overlay.active {
     display: block;
   }
-  
+
   /* Fix for initial page load dark screen */
   @media (min-width: 769px) {
     .overlay.active {
       display: none;
     }
   }
-  
+
   @media (max-width: 768px) {
     .menu-toggle {
       display: flex;
     }
-    
+
     .chat-main {
       padding-left: 0;
     }
-    
+
     /* Add spacing on the welcome screen for the menu button */
     .profile-header-container {
       padding-left: 48px;
@@ -490,7 +490,7 @@
     position: relative;
     height: 100vh;
   }
-  
+
   .profile-header-container {
     display: flex;
     justify-content: flex-end;
@@ -499,11 +499,11 @@
     height: 56px;
     box-sizing: border-box;
   }
-  
+
   .profile-spacer {
     flex: 1;
   }
-  
+
   .profile-button-container {
     display: flex;
     justify-content: flex-end;
