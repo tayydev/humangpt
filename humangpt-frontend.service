@@ -1,0 +1,15 @@
+[Unit]
+Description=HumanGPT Frontend
+After=network.target
+
+[Service]
+Type=simple
+User=tayydev
+WorkingDirectory=/home/tayydev/humangpt/frontend
+ExecStartPre=/home/tayydev/.bun/bin/bun run build
+ExecStart=/home/tayydev/.bun/bin/bun run preview --host 0.0.0.0
+Restart=on-failure
+RestartSec=5s
+
+[Install]
+WantedBy=multi-user.target

@@ -4,7 +4,7 @@
 set -e
 
 # Configuration variables
-API_URL="http://localhost:8000/openapi.json"  # Update with your FastAPI URL
+API_URL="http://localhost:8001/openapi.json"  # Update with your FastAPI URL
 OUTPUT_DIR="../client"
 PACKAGE_NAME="humangpt-client"
 PACKAGE_VERSION="0.1.0"
