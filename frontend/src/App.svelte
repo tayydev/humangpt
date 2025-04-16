@@ -7,19 +7,19 @@
   import AnimatedNames from './lib/AnimatedNames.svelte';
   import ProfilePage from './lib/ProfilePage.svelte';
   import ProfileButton from './lib/ProfileButton.svelte';
-  import {apiClient} from "./lib/api-client";
+  import {apiClient, createWebSocketClient} from "./lib/api-client";
   import type {Session, UserPublic} from "humangpt-client"
-  import { onMount, onDestroy } from 'svelte';
+  import {onDestroy, onMount} from 'svelte';
 
   let user: UserPublic = {uuid: "", display_name: "loading...", pfp_url: ""};
   let chats: Session[] = [];
   let currentChat: Session | null = null;
   let showWaitingMessage = false;
   let skipWaitingAnimation = false;
-  
+
   // Navigation state
   let showProfilePage = false;
-  
+
   // Mobile sidebar state - default false for SSR, will be set correctly on mount
   let isSidebarOpen = false;
 
@@ -27,8 +27,8 @@
   let isAwaitingResponse = false;
   let didCloseAwaiting = false;
 
-  // Timer for auto-refreshing current chat
-  let refreshTimer: number | null = null;
+  // WebSocket client
+  let wsClient: ReturnType<typeof createWebSocketClient> | null = null;
 
   // Helper function to deduplicate chats by UUID
   function deduplicateChats(newChat: Session, existingChats: Session[]): Session[] {
@@ -38,60 +38,47 @@
     return [newChat, ...filteredChats];
   }
 
+  // Set up effect to watch for websocket messages
+  $: if (wsClient && wsClient.messages.length > 0) {
+    // Update the current chat with messages from websocket
+    updateChatWithWebSocketMessages();
+  }
+
   onMount(async () => {
     // Initialize sidebar state based on screen width after a small delay to prevent flash
     setTimeout(() => {
       isSidebarOpen = window.innerWidth > 768;
     }, 0);
-    
+
     // Add window resize listener
     window.addEventListener('resize', handleResize);
-    
+
     // Check URL parameters
     const params = new URLSearchParams(window.location.search);
     const sessionUuid = params.get('session');
-    const inProfilePage = params.get('profile') === 'true';
-    
     // Set profile page state based on URL
-    showProfilePage = inProfilePage;
+    showProfilePage = params.get('profile') === 'true';
 
     if(!sessionUuid) {
-      //make a guest user
-      user = (await apiClient.guestGuestUserPost()).data
+      // Make a guest user
+      user = (await apiClient.guestGuestUserPost()).data;
     }
-
 
     if (sessionUuid) {
-      try {
-        // Call the API to get the session by UUID
-        const response = await apiClient.getSessionSessionUuidGet(sessionUuid);
-        if (response.data) {
-          currentChat = response.data;
-          chats = deduplicateChats(response.data, chats);
+        // Initialize WebSocket client
+        wsClient = createWebSocketClient(sessionUuid, user.uuid);
+        wsClient.connect();
 
-          //we make a user and base it off of who owns the chat we just loaded
-          user = (await apiClient.getUserGetUserUuidGet(currentChat!.user_id)).data
-          console.log("our user is", user)
-
-          // Check message status upon loading a chat
-          updateCurrentChatStatus();
-          setTimeout(() => {
-            skipWaitingAnimation = false; // Reset to ensure animation plays when showing
-            showWaitingMessage = isAwaitingResponse;
-            scrollChatToBottom(); // Scroll to bottom when popup appears
-          }, 500);
-
-          // Only start the refresh timer if we're not in profile view
-          if (!showProfilePage) {
-            startRefreshTimer();
-          }
-        }
-      } catch (error) {
-        console.error('Failed to load session:', error);
-      }
+        // Check message status upon loading a chat
+        updateCurrentChatStatus();
+        setTimeout(() => {
+          skipWaitingAnimation = false; // Reset to ensure animation plays when showing
+          showWaitingMessage = isAwaitingResponse;
+          scrollChatToBottom(); // Scroll to bottom when popup appears
+        }, 500);
     }
 
-    console.log("mount finished", showWaitingMessage)
+    console.log("mount finished", showWaitingMessage);
   });
 
   // Handle window resize
@@ -100,9 +87,12 @@
     isSidebarOpen = window.innerWidth > 768;
   }
 
-  // Clean up timer on component destroy
+  // Clean up timer and websocket on component destroy
   onDestroy(() => {
-    stopRefreshTimer();
+    // Disconnect websocket if it exists
+    if (wsClient) {
+      wsClient.disconnect();
+    }
     // Remove resize listener
     window.removeEventListener('resize', handleResize);
   });
@@ -116,80 +106,83 @@
     // Reset status when returning to splash screen
     isAwaitingResponse = false;
 
-    // Stop the refresh timer when returning to splash screen
-    stopRefreshTimer();
+    // Disconnect WebSocket if it exists
+    if (wsClient) {
+      wsClient.disconnect();
+      wsClient = null;
+    }
   }
 
   function selectChat(event: CustomEvent<Session>) {
     didCloseAwaiting = false;
     currentChat = event.detail;
+
     // Update URL with selected session UUID, preserving profile state
     updateUrlWithSession(event.detail.uuid, showProfilePage);
 
     // Update status when switching to a different chat
     updateCurrentChatStatus();
 
-    // Refresh the current chat when switching to it
-    refreshCurrentChat();
-  }
+    // Disconnect any existing WebSocket connection
+    if (wsClient) {
+      wsClient.disconnect();
+    }
 
-  // Function to refresh the current chat
-  async function refreshCurrentChat() {
-    if (!currentChat || !currentChat.uuid) return;
-
-    try {
-      const response = await apiClient.getSessionSessionUuidGet(currentChat.uuid);
-      if (response.data) {
-        // Update current chat with fresh data
-        currentChat = response.data;
-        // Update chats list
-        chats = deduplicateChats(response.data, chats);
-        // Update status
-        updateCurrentChatStatus();
-        skipWaitingAnimation = true;
-        showWaitingMessage = isAwaitingResponse;
-      }
-    } catch (error) {
-      console.error('Failed to refresh session:', error);
+    // Initialize WebSocket for the selected chat
+    if (event.detail.uuid && user.uuid) {
+      wsClient = createWebSocketClient(event.detail.uuid, user.uuid);
+      wsClient.connect();
     }
   }
 
-  // Start the refresh timer
-  function startRefreshTimer() {
-    // Clear any existing timer first
-    stopRefreshTimer();
+  // Function to update chat data with messages from websocket
+  function updateChatWithWebSocketMessages() {
+    if (!wsClient || !currentChat) return;
 
-    // Set up a new timer to refresh every 5 seconds
-    refreshTimer = setInterval(() => {
-      refreshCurrentChat();
-    }, 5000);
-  }
+    // Get latest messages from websocket
+    const latestMessages = wsClient.messages;
+    if (latestMessages.length === 0) return;
 
-  // Stop the refresh timer
-  function stopRefreshTimer() {
-    if (refreshTimer !== null) {
-      clearInterval(refreshTimer);
-      refreshTimer = null;
+    // Only process if we have a current chat
+    if (currentChat) {
+      // Update current chat with the latest messages
+      currentChat = {
+        ...currentChat,
+        content: latestMessages
+      };
+
+      // Update chats list with the updated chat
+      chats = deduplicateChats(currentChat, chats);
+
+      // Update UI status based on latest messages
+      updateCurrentChatStatus();
+
+      // Update waiting message display
+      skipWaitingAnimation = true;
+      showWaitingMessage = isAwaitingResponse;
+
+      // Scroll to bottom when new messages arrive
+      scrollChatToBottom();
     }
   }
 
   function updateUrlWithSession(sessionUuid: string | null, inProfilePage: boolean = false) {
     const url = new URL(window.location.href);
-    
+
     // Update session parameter
     if (sessionUuid) {
       url.searchParams.set('session', sessionUuid);
     } else {
       url.searchParams.delete('session');
     }
-    
+
     // Update profile page parameter
     if (inProfilePage) {
       url.searchParams.set('profile', 'true');
     } else {
       url.searchParams.delete('profile');
     }
-    
+
     window.history.pushState({}, '', url.toString());
   }
 
@@ -215,7 +208,7 @@
     scrollChatToBottom();
 
     try {
-      console.log("We have the user id", user)
+      console.log("We have the user id", user);
       const result = currentChat == null ?
         (await apiClient.submitSubmitPost(messageContent, user!.uuid, false)).data :
         (await apiClient.submitSubmitPost(messageContent, user!.uuid, false, currentChat.uuid)).data;
@@ -233,10 +226,15 @@
       // Update URL with new session UUID, preserving profile state
       if (result.uuid) {
         updateUrlWithSession(result.uuid, showProfilePage);
-      }
 
-      // Start or restart the refresh timer for the current chat
-      startRefreshTimer();
+        // Initialize or reinitialize websocket connection for this chat
+        if (wsClient) {
+          wsClient.disconnect();
+        }
+
+        wsClient = createWebSocketClient(result.uuid, user!.uuid);
+        wsClient.connect();
+      }
 
       // Show the waiting message after 1.5 seconds with animation
       setTimeout(() => {
@@ -307,25 +305,35 @@
       }
     }, 100);
   }
-  
+
   function navigateToProfile() {
     showProfilePage = true;
-    // Stop refreshing when navigating away from chat
-    stopRefreshTimer();
+
+    // Disconnect websocket when navigating away
+    if (wsClient) {
+      wsClient.disconnect();
+    }
+
     // Update URL to reflect profile page state
     updateUrlWithSession(currentChat?.uuid || null, true);
   }
-  
+
   function navigateToChat() {
     showProfilePage = false;
-    // Restart refreshing when returning to chat
-    if (currentChat) {
-      startRefreshTimer();
+
+    // Reconnect websocket if we have a chat
+    if (currentChat && currentChat.uuid && user.uuid) {
+      if (wsClient) {
+        wsClient.disconnect();
+      }
+      wsClient = createWebSocketClient(currentChat.uuid, user.uuid);
+      wsClient.connect();
     }
+
     // Update URL to reflect chat page state
     updateUrlWithSession(currentChat?.uuid || null, false);
   }
-  
+
   function toggleSidebar() {
     isSidebarOpen = !isSidebarOpen;
   }
@@ -340,7 +348,7 @@
     <button class="menu-toggle" on:click={toggleSidebar} aria-label="Toggle sidebar">
       <span class="menu-icon">☰</span>
     </button>
-    
+
     <Sidebar
             {chats}
             {currentChat}
@@ -349,15 +357,15 @@
             on:select={selectChat}
             on:toggleSidebar={toggleSidebar}
     />
-    
+
     <div class="overlay" class:active={isSidebarOpen} on:click={toggleSidebar}></div>
-  
+
     <main class="chat-main">
       {#if currentChat}
-        <ChatHeader 
-          title={currentChat.title || ""} 
-          {user} 
-          on:profileClick={navigateToProfile} 
+        <ChatHeader
+          title={currentChat.title || ""}
+          {user}
+          on:profileClick={navigateToProfile}
         />
         <MessageList
           messages={currentChat.content || []}
@@ -410,14 +418,14 @@
     position: relative;
     overflow: hidden;
   }
-  
+
   /* Safari-specific fixes */
   @supports (-webkit-touch-callout: none) {
     .chat-main {
       height: -webkit-fill-available;
     }
   }
-  
+
   .menu-toggle {
     display: none;
     position: fixed;
@@ -437,15 +445,15 @@
     justify-content: center;
     transition: background-color 0.2s ease;
   }
-  
+
   .menu-toggle:hover {
     background-color: rgba(255, 255, 255, 0.1);
   }
-  
+
   .menu-icon {
     line-height: 1;
   }
-  
+
   .overlay {
     display: none;
     position: fixed;
@@ -456,27 +464,27 @@
     background-color: rgba(0, 0, 0, 0.5);
     z-index: 999;
   }
-  
+
   .overlay.active {
     display: block;
   }
-  
+
   /* Fix for initial page load dark screen */
   @media (min-width: 769px) {
     .overlay.active {
       display: none;
     }
   }
-  
+
   @media (max-width: 768px) {
     .menu-toggle {
       display: flex;
     }
-    
+
     .chat-main {
       padding-left: 0;
     }
-    
+
     /* Add spacing on the welcome screen for the menu button */
     .profile-header-container {
       padding-left: 48px;
@@ -490,7 +498,7 @@
     position: relative;
     height: 100vh;
   }
-  
+
   .profile-header-container {
     display: flex;
     justify-content: flex-end;
@@ -499,11 +507,11 @@
     height: 56px;
     box-sizing: border-box;
   }
-  
+
   .profile-spacer {
     flex: 1;
   }
-  
+
   .profile-button-container {
     display: flex;
     justify-content: flex-end;
