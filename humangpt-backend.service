@@ -6,8 +6,7 @@ After=network.target
 Type=simple
 User=tayydev
 WorkingDirectory=/home/tayydev/humangpt/backend
-ExecStartPre=/usr/bin/git -C /home/tayydev/humangpt pull
-ExecStart=/home/tayydev/.local/bin/poetry run python src --host 0.0.0.0
+ExecStart=/home/tayydev/.local/bin/poetry run python src --host 127.0.0.1
 Restart=on-failure
 RestartSec=5s
 
