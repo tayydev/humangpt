@@ -1,3 +1,5 @@
+import json
+
 from starlette.websockets import WebSocket
 
 from data import Message
@@ -5,7 +7,7 @@ from data import Message
 async def catch_up_socket(socket: WebSocket, session_id: str):
     from gpt_service import get_session
     all_messages = get_session(session_id).content
-    await socket.send_json([m.model_dump_json() for m in all_messages])
+    await socket.send_json([json.loads(m.model_dump_json()) for m in all_messages])
 
 
 class SessionSocketManager:
@@ -26,7 +28,7 @@ class SessionSocketManager:
         for session_uuid, socket in list(self.active.items()):
             if session_uuid == session_id:
                 # we always update session as a list
-                await socket.send_json([message.model_dump_json()])
+                await socket.send_json([json.loads(message.model_dump_json())])
 
 
 

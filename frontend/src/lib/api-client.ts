@@ -101,14 +101,17 @@ export class WebSocketClient {
 
   private handleMessage(event: MessageEvent): void {
     try {
-      const newStuff: Message[] = JSON.parse(event.data);
+      const newStuff: Message[] = JSON.parse(event.data)
 
       console.log("RECIEVING NEW MESSAGE, WRITING TO STORE", event.data)
 
       // Update the writeableMessageBuffer store
-      this.writeableMessageBuffer.update((msgs: Message[]) => [...msgs, ...newStuff]);
-
-      console.log("store is now", this.writeableMessageBuffer)
+      this.writeableMessageBuffer.update((msgs: Message[]) => {
+        const updatedMsgs = [...msgs, ...newStuff];
+        // Log inside the callback to see the actual updated value
+        console.log("store is now", updatedMsgs);
+        return updatedMsgs;
+      });
 
     } catch (err) {
       console.error("WS parse error:", err);
