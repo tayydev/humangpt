@@ -1,7 +1,7 @@
 <script lang="ts">
   import ChatList from './ChatList.svelte';
 
-  export let chats: Session[];
+  export let chats: SessionDTO[];
   export let currentSession: SessionDTO | null;
   export let isSidebarOpen = true;
 

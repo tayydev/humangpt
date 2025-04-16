@@ -10,60 +10,57 @@
   import {apiClient, WebSocketClient} from "./lib/api-client";
   import type {Message, Session, SessionDTO, UserPublic} from "humangpt-client"
   import {onDestroy, onMount} from 'svelte';
-  import {derived, type Readable, writable, type Writable} from "svelte/store";
-
-  let user: UserPublic = {uuid: "", display_name: "loading...", pfp_url: ""};
-  let chats: Session[] = [];
-  let currentSession: SessionDTO | null = null;
-  let showWaitingMessage = false;
-  let skipWaitingAnimation = false;
-
-  // Navigation state
-  let showProfilePage = false;
-
-  // Mobile sidebar state - default false for SSR, will be set correctly on mount
-  let isSidebarOpen = false;
-
-  // We'll stop using these global states and instead check per-chat status
-  let isAwaitingResponse = false;
-  let didCloseAwaiting = false;
-
-  // Create placeholder stores that will be used until the real client is initialized
-  // const emptyStatus: Writable<string> = writable('connecting');
-
-  // Easy access to the stores (with null safety)
-  // $: messages = wsClient?.messages || emptyMessages;
-
-  const messages = writable<Message[]>([])
-
-  // //chatgpt magic
-  // const messages = derived<[Readable<never[]>], Message[]>(
-  //         // Using an empty array as placeholder source
-  //         [writable<never[]>([])],
-  //         (_, set) => {
-  //           // Set initial empty array
-  //           set([]);
-  //
-  //           // Only set up subscription if wsClient exists
-  //           if (!wsClient) return;
-  //
-  //           // Create subscription and return the unsubscribe function
-  //           return wsClient.messages.subscribe((value: Message[]) => {
-  //             set(value);
-  //           });
-  //         },
-  //         [] // Default value
-  // );
+  import {writable} from "svelte/store";
 
   // WebSocket client
   let wsClient: WebSocketClient | null = null;
 
-  // Helper function to deduplicate chats by UUID
-  function deduplicateChats(newChat: Session, existingChats: Session[]): Session[] {
-    // Remove any existing chat with the same UUID
-    const filteredChats = existingChats.filter(chat => chat.uuid !== newChat.uuid);
-    // Add the new/updated chat at the beginning
-    return [newChat, ...filteredChats];
+  //data state
+  let user: UserPublic = {uuid: "", display_name: "loading...", pfp_url: ""};
+  let chatIds: string[] = []
+  let chats: SessionDTO[] = [];
+  let currentSession: SessionDTO | null = null;
+  let messages = writable<Message[]>([])
+  let isAwaitingResponse = false;
+
+  //data runes
+  $: isAwaitingResponse = $messages.length > 0 && $messages[$messages.length - 1].user_id == currentSession!.user_id;
+  $: if(currentSession) {
+    chatIds = loadSessionChatIds() //make sure we have loaded before pushing
+    chatIds.unshift(currentSession.uuid)
+    chatIds = [...new Set(chatIds)]; //unique filter
+    console.log("pushed new ids", chatIds)
+    saveSessionChatIds(chatIds)
+    loadSessionDTOFromChatIds().then() //kick this off
+  }
+
+  //ui state
+  let showWaitingMessage = false;
+  let skipWaitingAnimation = false;
+  let showProfilePage = false;
+  let isSidebarOpen = false;
+  let didCloseAwaiting = false;
+
+  function saveSessionChatIds(chats: string[]) {
+    localStorage.setItem("humangpt_chat_ids", JSON.stringify(chats));
+  }
+
+  function loadSessionChatIds(): string[] {
+    try {
+      const savedChats = localStorage.getItem("humangpt_chat_ids");
+      console.log("got saved", savedChats)
+      return savedChats ? JSON.parse(savedChats) : [];
+    } catch (error) {
+      console.error("Failed to load chats from localStorage:", error);
+      return [];
+    }
+  }
+
+  async function loadSessionDTOFromChatIds() {
+    chats = (await Promise.all(chatIds.map(async id =>
+            (await apiClient.sessionEndpointGetSessionGet(id)).data
+    )));
+    console.log("loaded dtos", chats)
   }
 
   onMount(async () => {
@@ -81,29 +78,27 @@
     // Set profile page state based on URL
     showProfilePage = params.get('profile') === 'true';
 
-    if(!sessionUuid) {
-      // Make a guest user
-      user = (await apiClient.guestGuestUserPost()).data;
+    if(!sessionUuid) { //starting fresh
+      user = (await apiClient.guestGuestUserPost()).data; //make guest user
+    }
+    else {
+      currentSession = (await apiClient.sessionEndpointGetSessionGet(sessionUuid)).data //dto
+      user = (await apiClient.getUserGetUserGet(currentSession.user_id)).data //old user data
+      wsClient = new WebSocketClient(messages, sessionUuid); //make client
+      wsClient.connect(); //tell it to connect
+
+      // Check message status upon loading a chat
+      updateCurrentChatStatus();
+      setTimeout(() => {
+        skipWaitingAnimation = false; // Reset to ensure animation plays when showing
+        showWaitingMessage = isAwaitingResponse;
+        queueScrollChatToBottom(); // Scroll to bottom when popup appears
+      }, 500);
+
     }
 
-    if (sessionUuid) {
-        console.log("TODO: LOAD EXISTING")
-
-        currentSession = (await apiClient.sessionEndpointGetSessionGet(sessionUuid)).data
-        user = (await apiClient.getUserGetUserGet(currentSession.user_id)).data
-        wsClient = new WebSocketClient(messages, sessionUuid);
-        wsClient.connect();
-
-        // Check message status upon loading a chat
-        updateCurrentChatStatus();
-        setTimeout(() => {
-          skipWaitingAnimation = false; // Reset to ensure animation plays when showing
-          showWaitingMessage = isAwaitingResponse;
-          queueScrollChatToBottom(); // Scroll to bottom when popup appears
-        }, 500);
-    }
-
-    console.log("mount finished", showWaitingMessage);
+    chatIds = loadSessionChatIds()
+    await loadSessionDTOFromChatIds()
   });
 
   // Handle window resize
@@ -125,6 +120,9 @@
   function newChatSplashScreen() {
     // Return to splash screen by setting currentChat to null
     currentSession = null;
+    wsClient?.disconnect()
+    messages.set([]) //reset message
+
     // Update URL to remove session but preserve profile state
     updateUrlWithSession(null, showProfilePage);
 
@@ -244,20 +242,6 @@
     }
 
     wsClient!.send(msg) //send message
-
-    // // Check message status upon loading a chat
-    // updateCurrentChatStatus();
-    // setTimeout(() => {
-    //   skipWaitingAnimation = false; // Reset to ensure animation plays when showing
-    //   showWaitingMessage = isAwaitingResponse;
-    //   queueScrollChatToBottom(); // Scroll to bottom when popup appears
-    // }, 500);
-    //
-    // // Use deduplication helper to update chats list
-    // chats = deduplicateChats(currentChat, chats);
-
-    // Check if last message needs a response and update UI accordingly
-    // updateCurrentChatStatus();
 
     // Scroll to bottom when new messages arrive
     queueScrollChatToBottom();

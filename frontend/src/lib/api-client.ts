@@ -13,10 +13,6 @@ const config = new Configuration({
   basePath: API_BASE_PATH
 });
 
-//TODO: is this overly verbose
-export type ConnectionStatus = 'connecting' | 'connected' | 'disconnected' | 'error';
-
-
 export class WebSocketClient {
   private ws: WebSocket | null = null;
   private connected: boolean = false;
@@ -27,7 +23,6 @@ export class WebSocketClient {
 
   // Svelte stores
   private writeableMessageBuffer: Writable<Message[]>;
-  public status: Writable<ConnectionStatus> = writable('connecting');
 
   constructor(writeTo: Writable<Message[]>, sessionId: string, baseUrl?: string) {
     this.writeableMessageBuffer = writeTo;
@@ -37,7 +32,6 @@ export class WebSocketClient {
 
   public connect(): void {
     this.cleanup();
-    this.status.set('connecting');
 
     const url = `${this.baseUrl}/ws/session?session_id=${this.sessionId}`;
     console.log("connecting websocket to url:", url);
@@ -63,9 +57,6 @@ export class WebSocketClient {
 
     try {
       this.ws!.send(JSON.stringify(msg));
-
-      // // Update the store with the sent message
-      // this.writeableMessageBuffer.update(msgs => [...msgs, msg]);
 
       return true;
     } catch (error) {
@@ -95,7 +86,6 @@ export class WebSocketClient {
 
   private handleOpen(): void {
     this.connected = true;
-    this.status.set('connected');
     this.flushQueue();
   }
 
@@ -115,18 +105,15 @@ export class WebSocketClient {
 
     } catch (err) {
       console.error("WS parse error:", err);
-      this.status.set('error');
     }
   }
 
   private handleClose(): void {
     this.connected = false;
-    this.status.set('disconnected');
     this.scheduleReconnect();
   }
 
   private handleError(): void {
-    this.status.set('error');
     this.ws?.close();
   }
 
@@ -164,10 +151,6 @@ export class WebSocketClient {
 
       try {
         this.ws!.send(JSON.stringify(msg));
-
-        // Also update the store with queued writeableMessageBuffer as they're sent
-        this.writeableMessageBuffer.update(msgs => [...msgs, msg]);
-
         sentCount++;
       } catch (error) {
         console.error("Failed to send queued message:", error);
