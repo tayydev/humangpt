@@ -18,22 +18,24 @@ export class WebSocketClient {
   private connected: boolean = false;
   private reconnTimer: number | null = null;
   private readonly sessionId: string;
+  private readonly userId: string;
   private baseUrl: string;
   private messageQueue: Message[] = [];
 
   // Svelte stores
   private writeableMessageBuffer: Writable<Message[]>;
 
-  constructor(writeTo: Writable<Message[]>, sessionId: string, baseUrl?: string) {
+  constructor(writeTo: Writable<Message[]>, sessionId: string, userId: string, baseUrl?: string) {
     this.writeableMessageBuffer = writeTo;
     this.sessionId = sessionId;
+    this.userId = userId;
     this.baseUrl = baseUrl || API_BASE_PATH.replace("http", "ws");
   }
 
   public connect(): void {
     this.cleanup();
 
-    const url = `${this.baseUrl}/ws/session?session_id=${this.sessionId}`;
+    const url = `${this.baseUrl}/ws/session?session_id=${this.sessionId}&user_id=${this.userId}`;
     console.log("connecting websocket to url:", url);
 
     this.ws = new WebSocket(url);

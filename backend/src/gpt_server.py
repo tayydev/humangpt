@@ -24,9 +24,10 @@ async def session_endpoint(uuid: str) -> SessionDTO:
 
 
 @app.get("/all-unanswered-sessions")
-async def all_unanswered_sessions(answerer_id: str) -> list[Session]:
+async def all_unanswered_sessions(answerer_id: str) -> list[SessionDTO]:
+    # filter out self, filter out already answered questions
     return sorted(
-        [s for s in get_sessions_list() if s.user_id != answerer_id],
+        [s.to_dto() for s in get_sessions_list() if s.user_id != answerer_id and len(s.content) > 0 and s.content[-1].user_id == s.user_id],
         key=lambda s: s.updated_timestamp
     )
 
@@ -48,21 +49,23 @@ async def create_session(title: str, user_id: str) -> SessionDTO:
 
 # websockets
 @app.websocket("/ws/session")
-async def ws_session(websocket: WebSocket, session_id: str):
+async def ws_session(websocket: WebSocket, session_id: str, user_id: str):  # its important people have user ids so killing one session doesn't kill them all
     print("New session requested!")
 
-    await socket_manager.connect(websocket, session_id)
+    await socket_manager.connect(websocket, session_id, user_id)
 
     try:
         # catch-up
-        await catch_up_socket(websocket, session_id)
+        if not await catch_up_socket(websocket, session_id, user_id):
+            print("Failed to catch up socket")
+            socket_manager.disconnect(websocket)
 
         print("Session got caught up!")
 
         while True:
             data = await websocket.receive_json()
             msg: Message = Message.model_validate(data)
-            await append_to_session(session_id, msg)
+            await append_to_session(session_id, user_id, msg)
 
     except WebSocketDisconnect:
         socket_manager.disconnect(websocket)

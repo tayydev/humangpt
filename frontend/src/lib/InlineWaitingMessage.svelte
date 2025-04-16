@@ -1,16 +1,20 @@
 <script lang="ts">
   import { fade, slide } from 'svelte/transition';
   import {createEventDispatcher, onMount, onDestroy} from 'svelte';
-  import type {Session, UserPublic, Message} from "humangpt-client";
-  import {apiClient} from "./api-client";
+  import type {Session, UserPublic, Message, SessionDTO} from "humangpt-client";
+  import {apiClient, WebSocketClient} from "./api-client";
+  import {writable, type Writable} from "svelte/store";
 
   export let visible = false;
   export let skipAnimation = false;
   export let user: UserPublic;
 
+  let wsClient: WebSocketClient | null = null;
+  let messages: Writable<Message[]> = writable([])
+
   const dispatch = createEventDispatcher();
-  let sessions: Session[] = [];
-  let selectedSession: Session | null = null;
+  let sessions: SessionDTO[] = [];
+  let selectedSession: SessionDTO | null = null;
   let responseText = '';
   let isSubmitting = false;
   let refreshInterval: number | null = null;
@@ -42,6 +46,11 @@
   function selectSession(session: Session) {
     selectedSession = session;
     responseText = ''; // Clear any previous response
+
+    wsClient?.disconnect()
+    messages.set([])
+    wsClient = new WebSocketClient(messages, session.uuid, user.uuid)
+    wsClient.connect()
   }
 
   function backToQuestionsList() {
@@ -58,9 +67,18 @@
 
     try {
       isSubmitting = true;
-      await apiClient.submitSubmitPost(responseText, user.uuid, true, selectedSession.uuid);
 
-      // After successful submission
+      const msg: Message = {
+        user_id: user.uuid,
+        name: user.display_name,
+        pfp_url: user.pfp_url,
+        content: responseText,
+        is_answer: true
+      }
+
+      wsClient!.send(msg)
+      wsClient!.disconnect() //technically a little dangerous
+      messages.set([])
       selectedSession = null;
       responseText = '';
 
@@ -80,14 +98,8 @@
   }
 
   async function loadUnansweredSessions() {
-    try {
-      console.log("loading unanswered", user.uuid)
-      const response = await apiClient.allUnansweredSessionsAllUnansweredSessionsGet(user.uuid);
-      sessions = response.data.filter(sesh => sesh.uuid );
-    } catch (error) {
-      console.error('Error loading unanswered sessions:', error);
-      sessions = [];
-    }
+    const response = await apiClient.allUnansweredSessionsAllUnansweredSessionsGet(user.uuid);
+    sessions = response.data.filter(sesh => sesh.uuid );
   }
 
   let showSubmitSuccess = false;
@@ -176,7 +188,7 @@
 
           <!-- Show conversation context -->
           <div class="conversation-context">
-            {#each selectedSession.content as message}
+            {#each $messages as message}
               <div class="context-message {message.is_answer ? 'answer' : 'question'}">
                 <div class="message-author">{message.name}</div>
                 <div class="message-text">{message.content}</div>

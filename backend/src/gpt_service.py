@@ -28,14 +28,14 @@ def get_or_create_session(uuid: Optional[str], title: str, user_id: str) -> Sess
     else:
         return Session(uuid=str(uuid4()), title=title, user_id=user_id)
 
-async def append_to_session(session_id: str, message: Message):
+async def append_to_session(session_id: str, user_id: str, message: Message):
     session = get_or_create_session(session_id, title=message.content, user_id=message.user_id)
     user = get_user(message.user_id)
     session.content.append(Message(name=user.display_name, pfp_url=user.pfp_url, content=message.content, is_answer=message.is_answer, user_id=message.user_id))  # append new content
     session.updated_timestamp = datetime.now(timezone.utc)
     write_session(session)
     # now broadcast
-    await socket_manager.update_session(session_id, message)
+    await socket_manager.update_session(session_id, user_id, message)
 
 
 # puts Session into database

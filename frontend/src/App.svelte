@@ -27,9 +27,11 @@
   $: isAwaitingResponse = $messages.length > 0 && $messages[$messages.length - 1].user_id == currentSession!.user_id;
   $: if(currentSession) {
     chatIds = loadSessionChatIds() //make sure we have loaded before pushing
-    chatIds.unshift(currentSession.uuid)
-    chatIds = [...new Set(chatIds)]; //unique filter
-    console.log("pushed new ids", chatIds)
+    if (!chatIds.includes(currentSession.uuid)) {
+      // Only add the UUID if it doesn't exist yet (don't reorder)
+      chatIds.push(currentSession.uuid)
+    }
+    console.log("updated ids", chatIds)
     saveSessionChatIds(chatIds)
     loadSessionDTOFromChatIds().then() //kick this off
   }
@@ -83,18 +85,16 @@
     }
     else {
       currentSession = (await apiClient.sessionEndpointGetSessionGet(sessionUuid)).data //dto
-      user = (await apiClient.getUserGetUserGet(currentSession.user_id)).data //old user data
-      wsClient = new WebSocketClient(messages, sessionUuid); //make client
+      user = (await apiClient.getUserEndpointGetUserGet(currentSession.user_id)).data //old user data
+      wsClient = new WebSocketClient(messages, sessionUuid, user.uuid); //make client
       wsClient.connect(); //tell it to connect
 
       // Check message status upon loading a chat
-      updateCurrentChatStatus();
       setTimeout(() => {
         skipWaitingAnimation = false; // Reset to ensure animation plays when showing
         showWaitingMessage = isAwaitingResponse;
         queueScrollChatToBottom(); // Scroll to bottom when popup appears
       }, 500);
-
     }
 
     chatIds = loadSessionChatIds()
@@ -136,61 +136,30 @@
     }
   }
 
-  function selectChat(event: CustomEvent<Session>) {
-    didCloseAwaiting = false;
+  async function selectChat(event: CustomEvent<SessionDTO>) {
+    didCloseAwaiting = false; //reset popup close
+
+    wsClient?.disconnect()
+    messages.set([]) //reset message
+
     currentSession = event.detail;
 
     // Update URL with selected session UUID, preserving profile state
     updateUrlWithSession(event.detail.uuid, showProfilePage);
 
-    // Update status when switching to a different chat
-    updateCurrentChatStatus();
+    //api calls
+    user = (await apiClient.getUserEndpointGetUserGet(currentSession.user_id)).data //old user data
+    wsClient = new WebSocketClient(messages, currentSession.uuid, user.uuid); //make client
+    wsClient.connect(); //tell it to connect
 
-    // Disconnect any existing WebSocket connection
-    if (wsClient) {
-      wsClient.disconnect();
-    }
+    showWaitingMessage = false;
 
-    // Initialize WebSocket for the selected chat
-    if (event.detail.uuid && user.uuid) {
-      console.log("TODO INIT WEBSOCKET")
-      // wsClient = createWebSocketClient(event.detail.uuid, user.uuid);
-      // wsClient.connect();
-    }
+    setTimeout(() => {
+      skipWaitingAnimation = false; // Reset to ensure animation plays when showing
+      showWaitingMessage = isAwaitingResponse;
+      queueScrollChatToBottom(); // Scroll to bottom when popup appears
+    }, 500);
   }
-
-  // // Function to update chat data with messages from websocket
-  // function updateChatWithWebSocketMessages() {
-  //   if (!wsClient || !currentSession) return;
-  //
-  //   // Get latest messages from websocket
-  //   const latestMessages = wsClient.getMessages();
-  //   if (latestMessages.length === 0) return;
-  //
-  //   // Only process if we have a current chat
-  //   if (currentSession) {
-  //     // Update current chat with the latest messages
-  //     currentSession = {
-  //       ...currentSession,
-  //       content: latestMessages
-  //     };
-  //
-  //     // Update chats list with the updated chat
-  //     chats = deduplicateChats(currentSession, chats);
-  //
-  //     // Update UI status based on latest messages
-  //     updateCurrentChatStatus();
-  //
-  //     // Update waiting message display
-  //     skipWaitingAnimation = true;
-  //     showWaitingMessage = isAwaitingResponse;
-  //
-  //     // Scroll to bottom when new messages arrive
-  //     queueScrollChatToBottom();
-  //   }
-  // }
-
-  //TODO: auto scroll rune
 
   function updateUrlWithSession(sessionUuid: string | null, inProfilePage: boolean = false) {
     const url = new URL(window.location.href);
@@ -221,16 +190,17 @@
       showWaitingMessage = false;
     }
 
-    // Set status to awaiting response immediately for this chat
-    // isAwaitingResponse = true; //todo: probably dont need?
-
-    // queueScrollChatToBottom();
-
     console.log("We have the user id", user);
     if(currentSession == null) { //make new session
       currentSession = (await apiClient.createSessionCreateSessionPost(messageContent, user!.uuid)).data
-      wsClient = new WebSocketClient(messages, currentSession.uuid);
+      wsClient = new WebSocketClient(messages, currentSession.uuid, user.uuid);
       wsClient.connect()
+
+      // For new sessions, add to the beginning of the list
+      chatIds = loadSessionChatIds()
+      chatIds.unshift(currentSession.uuid)
+      chatIds = [...new Set(chatIds)]; // unique filter
+      saveSessionChatIds(chatIds)
     }
 
     const msg: Message = {
@@ -288,19 +258,7 @@
     };
   }
 
-  // Check status for current chat and update UI state
-  function updateCurrentChatStatus() {
-    if (!currentSession) {
-      isAwaitingResponse = false;
-      return;
-    }
 
-    const status = checkChatStatus(currentSession);
-    isAwaitingResponse = status.isAwaitingResponse;
-    if(!isAwaitingResponse) didCloseAwaiting = false
-
-    console.log('Current chat status:', status);
-  }
 
   // Helper function to force scroll to bottom
   function queueScrollChatToBottom() {
