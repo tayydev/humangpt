@@ -2,9 +2,10 @@
   import type { Session } from './types';
   import ChatItem from './ChatItem.svelte';
   import { createEventDispatcher } from 'svelte';
+  import type {SessionDTO} from "humangpt-client";
 
   export let chats: Session[];
-  export let currentChat: Session | null;
+  export let currentSession: SessionDTO | null;
 
   const dispatch = createEventDispatcher();
 
@@ -28,7 +29,7 @@
   {#each sortedChats as chat}
     <ChatItem
       {chat}
-      isActive={currentChat && currentChat.uuid === chat.uuid}
+      isActive={currentSession && currentSession.uuid === chat.uuid}
       on:click={() => selectChat(chat)}
     />
   {/each}

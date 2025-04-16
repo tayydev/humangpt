@@ -82,7 +82,7 @@
   async function loadUnansweredSessions() {
     try {
       console.log("loading unanswered", user.uuid)
-      const response = await apiClient.getUnansweredUnansweredSessionsGet(user.uuid);
+      const response = await apiClient.allUnansweredSessionsAllUnansweredSessionsGet(user.uuid);
       sessions = response.data.filter(sesh => sesh.uuid );
     } catch (error) {
       console.error('Error loading unanswered sessions:', error);

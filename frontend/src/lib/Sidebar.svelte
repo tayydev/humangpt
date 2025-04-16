@@ -2,11 +2,11 @@
   import ChatList from './ChatList.svelte';
 
   export let chats: Session[];
-  export let currentChat: Session | null;
+  export let currentSession: SessionDTO | null;
   export let isSidebarOpen = true;
 
   import { createEventDispatcher } from 'svelte';
-  import type {Session} from "humangpt-client";
+  import type {Session, SessionDTO} from "humangpt-client";
   const dispatch = createEventDispatcher();
 
   function createNewChat() {
@@ -34,7 +34,7 @@
   <button class="close-sidebar-btn" on:click={toggleSidebar}>×</button>
   <ChatList
     {chats}
-    {currentChat}
+    {currentSession}
     on:select={handleSelectChat}
   />
 </aside>
@@ -69,7 +69,7 @@
     transition: background-color 0.2s ease, color 0.2s ease;
     padding: 0;
   }
-  
+
   .close-sidebar-btn:hover {
     background-color: rgba(255, 255, 255, 0.1);
     color: white;
@@ -84,12 +84,12 @@
     justify-content: space-between;
     align-items: center;
   }
-  
+
   @media (max-width: 768px) {
     .sidebar-header {
       padding-right: 60px; /* Increase padding to prevent overlap */
     }
-    
+
     .new-chat-btn {
       margin-right: 12px; /* Add more margin to the new chat button */
       font-size: 0.95rem; /* Slightly reduce button text size */

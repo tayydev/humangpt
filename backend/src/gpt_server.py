@@ -1,10 +1,9 @@
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 
-from service import *
-from data import *
-from service import get_or_create_session
-from sockets import *
+from data import Session, SessionDTO, Message, UserPublic
+from gpt_service import get_or_create_session, get_session, get_sessions_list, write_session, create_temp_user, get_user, append_to_session
+from sockets import socket_manager, catch_up_socket
 
 app = FastAPI()
 
@@ -27,7 +26,7 @@ async def session_endpoint(uuid: str) -> SessionDTO:
 @app.get("/all-unanswered-sessions")
 async def all_unanswered_sessions(answerer_id: str) -> list[Session]:
     return sorted(
-        [s for s in get_sessions_list() if not s.content[-1].is_answer and s.user_id != answerer_id],
+        [s for s in get_sessions_list() if s.user_id != answerer_id],
         key=lambda s: s.updated_timestamp
     )
 
@@ -40,7 +39,7 @@ async def guest() -> UserPublic:
     return create_temp_user()
 
 @app.get("/get-user")
-async def get_user(uuid: str):
+async def get_user_endpoint(uuid: str):
     return get_user(uuid)
 
 @app.post("/create-session")
@@ -52,7 +51,7 @@ async def create_session(title: str, user_id: str) -> SessionDTO:
 async def ws_session(websocket: WebSocket, session_id: str):
     print("New session requested!")
 
-    await socket_manager.connect(websocket)
+    await socket_manager.connect(websocket, session_id)
 
     try:
         # catch-up

@@ -3,6 +3,7 @@
 // Direct imports from client source files since the client package isn't built
 import {DefaultApi, type Message} from "humangpt-client";
 import { Configuration } from "humangpt-client";
+import {writable, type Writable} from "svelte/store";
 
 // Default API base path with environment variable override
 const API_BASE_PATH = import.meta.env.VITE_API_BASE_PATH || 'https://api.humangpt.dev';
@@ -12,29 +13,36 @@ const config = new Configuration({
   basePath: API_BASE_PATH
 });
 
+//TODO: is this overly verbose
+export type ConnectionStatus = 'connecting' | 'connected' | 'disconnected' | 'error';
+
+
 export class WebSocketClient {
   private ws: WebSocket | null = null;
   private connected: boolean = false;
   private reconnTimer: number | null = null;
-  private messages: Message[] = [];
   private readonly sessionId: string;
   private baseUrl: string;
   private messageQueue: Message[] = [];
 
-  constructor(sessionId: string, baseUrl?: string) {
+  // Svelte stores
+  private writeableMessageBuffer: Writable<Message[]>;
+  public status: Writable<ConnectionStatus> = writable('connecting');
+
+  constructor(writeTo: Writable<Message[]>, sessionId: string, baseUrl?: string) {
+    this.writeableMessageBuffer = writeTo;
     this.sessionId = sessionId;
     this.baseUrl = baseUrl || API_BASE_PATH.replace("http", "ws");
   }
 
   public connect(): void {
     this.cleanup();
+    this.status.set('connecting');
 
     const url = `${this.baseUrl}/ws/session?session_id=${this.sessionId}`;
-
-    console.log("connecting websocket to url:", url)
+    console.log("connecting websocket to url:", url);
 
     this.ws = new WebSocket(url);
-
     this.ws.onopen = this.handleOpen.bind(this);
     this.ws.onmessage = this.handleMessage.bind(this);
     this.ws.onclose = this.handleClose.bind(this);
@@ -46,12 +54,6 @@ export class WebSocketClient {
     this.ws = null;
   }
 
-  /**
-   * Sends a message through the WebSocket.
-   * If the socket is not connected, the message is automatically queued.
-   * @param msg The message to send
-   * @returns Whether the message was sent immediately (true) or queued (false)
-   */
   public send(msg: Message): boolean {
     if (!this.isConnected()) {
       this.messageQueue.push(msg);
@@ -61,6 +63,10 @@ export class WebSocketClient {
 
     try {
       this.ws!.send(JSON.stringify(msg));
+
+      // // Update the store with the sent message
+      // this.writeableMessageBuffer.update(msgs => [...msgs, msg]);
+
       return true;
     } catch (error) {
       console.error("Failed to send message:", error);
@@ -69,19 +75,12 @@ export class WebSocketClient {
     }
   }
 
-  /**
-   * Clears all queued messages without sending them.
-   * @returns The number of messages cleared
-   */
   public clearQueue(): number {
     const count = this.messageQueue.length;
     this.messageQueue = [];
     return count;
   }
 
-  /**
-   * Gets the current number of queued messages.
-   */
   public getQueueLength(): number {
     return this.messageQueue.length;
   }
@@ -90,34 +89,41 @@ export class WebSocketClient {
     return this.connected && this.ws !== null && this.ws.readyState === WebSocket.OPEN;
   }
 
-  public getMessages(): Message[] {
-    return [...this.messages]; // Return a copy to prevent external modification
-  }
-
   public clearMessages(): void {
-    this.messages = [];
+    this.writeableMessageBuffer.set([]);
   }
 
   private handleOpen(): void {
     this.connected = true;
+    this.status.set('connected');
     this.flushQueue();
   }
 
   private handleMessage(event: MessageEvent): void {
     try {
-      const msg = JSON.parse(event.data);
-      this.messages.push(msg);
+      const newStuff: Message[] = JSON.parse(event.data);
+
+      console.log("RECIEVING NEW MESSAGE, WRITING TO STORE", event.data)
+
+      // Update the writeableMessageBuffer store
+      this.writeableMessageBuffer.update((msgs: Message[]) => [...msgs, ...newStuff]);
+
+      console.log("store is now", this.writeableMessageBuffer)
+
     } catch (err) {
       console.error("WS parse error:", err);
+      this.status.set('error');
     }
   }
 
   private handleClose(): void {
     this.connected = false;
+    this.status.set('disconnected');
     this.scheduleReconnect();
   }
 
   private handleError(): void {
+    this.status.set('error');
     this.ws?.close();
   }
 
@@ -143,12 +149,8 @@ export class WebSocketClient {
     }
   }
 
-  /**
-   * Attempts to send all queued messages.
-   * @returns The number of messages successfully sent
-   */
   private flushQueue(): number {
-    console.log("attempting to flush queue")
+    console.log("attempting to flush queue");
     if (!this.isConnected()) {
       return 0;
     }
@@ -159,10 +161,13 @@ export class WebSocketClient {
 
       try {
         this.ws!.send(JSON.stringify(msg));
+
+        // Also update the store with queued writeableMessageBuffer as they're sent
+        this.writeableMessageBuffer.update(msgs => [...msgs, msg]);
+
         sentCount++;
       } catch (error) {
         console.error("Failed to send queued message:", error);
-        // Put the message back at the front of the queue
         this.messageQueue.unshift(msg);
         break;
       }
@@ -175,6 +180,8 @@ export class WebSocketClient {
     return sentCount;
   }
 }
+
+
 
 
 

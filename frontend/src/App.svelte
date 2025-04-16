@@ -7,13 +7,14 @@
   import AnimatedNames from './lib/AnimatedNames.svelte';
   import ProfilePage from './lib/ProfilePage.svelte';
   import ProfileButton from './lib/ProfileButton.svelte';
-  import {apiClient, createWebSocketClient} from "./lib/api-client";
-  import type {Session, UserPublic} from "humangpt-client"
+  import {apiClient, WebSocketClient} from "./lib/api-client";
+  import type {Message, Session, SessionDTO, UserPublic} from "humangpt-client"
   import {onDestroy, onMount} from 'svelte';
+  import {derived, type Readable, writable, type Writable} from "svelte/store";
 
   let user: UserPublic = {uuid: "", display_name: "loading...", pfp_url: ""};
   let chats: Session[] = [];
-  let currentChat: Session | null = null;
+  let currentSession: SessionDTO | null = null;
   let showWaitingMessage = false;
   let skipWaitingAnimation = false;
 
@@ -27,8 +28,35 @@
   let isAwaitingResponse = false;
   let didCloseAwaiting = false;
 
+  // Create placeholder stores that will be used until the real client is initialized
+  // const emptyStatus: Writable<string> = writable('connecting');
+
+  // Easy access to the stores (with null safety)
+  // $: messages = wsClient?.messages || emptyMessages;
+
+  const messages = writable<Message[]>([])
+
+  // //chatgpt magic
+  // const messages = derived<[Readable<never[]>], Message[]>(
+  //         // Using an empty array as placeholder source
+  //         [writable<never[]>([])],
+  //         (_, set) => {
+  //           // Set initial empty array
+  //           set([]);
+  //
+  //           // Only set up subscription if wsClient exists
+  //           if (!wsClient) return;
+  //
+  //           // Create subscription and return the unsubscribe function
+  //           return wsClient.messages.subscribe((value: Message[]) => {
+  //             set(value);
+  //           });
+  //         },
+  //         [] // Default value
+  // );
+
   // WebSocket client
-  let wsClient: ReturnType<typeof createWebSocketClient> | null = null;
+  let wsClient: WebSocketClient | null = null;
 
   // Helper function to deduplicate chats by UUID
   function deduplicateChats(newChat: Session, existingChats: Session[]): Session[] {
@@ -36,12 +64,6 @@
     const filteredChats = existingChats.filter(chat => chat.uuid !== newChat.uuid);
     // Add the new/updated chat at the beginning
     return [newChat, ...filteredChats];
-  }
-
-  // Set up effect to watch for websocket messages
-  $: if (wsClient && wsClient.messages.length > 0) {
-    // Update the current chat with messages from websocket
-    updateChatWithWebSocketMessages();
   }
 
   onMount(async () => {
@@ -65,8 +87,11 @@
     }
 
     if (sessionUuid) {
-        // Initialize WebSocket client
-        wsClient = createWebSocketClient(sessionUuid, user.uuid);
+        console.log("TODO: LOAD EXISTING")
+
+        currentSession = (await apiClient.sessionEndpointGetSessionGet(sessionUuid)).data
+        user = (await apiClient.getUserGetUserGet(currentSession.user_id)).data
+        wsClient = new WebSocketClient(messages, sessionUuid);
         wsClient.connect();
 
         // Check message status upon loading a chat
@@ -74,7 +99,7 @@
         setTimeout(() => {
           skipWaitingAnimation = false; // Reset to ensure animation plays when showing
           showWaitingMessage = isAwaitingResponse;
-          scrollChatToBottom(); // Scroll to bottom when popup appears
+          queueScrollChatToBottom(); // Scroll to bottom when popup appears
         }, 500);
     }
 
@@ -99,7 +124,7 @@
 
   function newChatSplashScreen() {
     // Return to splash screen by setting currentChat to null
-    currentChat = null;
+    currentSession = null;
     // Update URL to remove session but preserve profile state
     updateUrlWithSession(null, showProfilePage);
 
@@ -115,7 +140,7 @@
 
   function selectChat(event: CustomEvent<Session>) {
     didCloseAwaiting = false;
-    currentChat = event.detail;
+    currentSession = event.detail;
 
     // Update URL with selected session UUID, preserving profile state
     updateUrlWithSession(event.detail.uuid, showProfilePage);
@@ -130,41 +155,44 @@
 
     // Initialize WebSocket for the selected chat
     if (event.detail.uuid && user.uuid) {
-      wsClient = createWebSocketClient(event.detail.uuid, user.uuid);
-      wsClient.connect();
+      console.log("TODO INIT WEBSOCKET")
+      // wsClient = createWebSocketClient(event.detail.uuid, user.uuid);
+      // wsClient.connect();
     }
   }
 
-  // Function to update chat data with messages from websocket
-  function updateChatWithWebSocketMessages() {
-    if (!wsClient || !currentChat) return;
+  // // Function to update chat data with messages from websocket
+  // function updateChatWithWebSocketMessages() {
+  //   if (!wsClient || !currentSession) return;
+  //
+  //   // Get latest messages from websocket
+  //   const latestMessages = wsClient.getMessages();
+  //   if (latestMessages.length === 0) return;
+  //
+  //   // Only process if we have a current chat
+  //   if (currentSession) {
+  //     // Update current chat with the latest messages
+  //     currentSession = {
+  //       ...currentSession,
+  //       content: latestMessages
+  //     };
+  //
+  //     // Update chats list with the updated chat
+  //     chats = deduplicateChats(currentSession, chats);
+  //
+  //     // Update UI status based on latest messages
+  //     updateCurrentChatStatus();
+  //
+  //     // Update waiting message display
+  //     skipWaitingAnimation = true;
+  //     showWaitingMessage = isAwaitingResponse;
+  //
+  //     // Scroll to bottom when new messages arrive
+  //     queueScrollChatToBottom();
+  //   }
+  // }
 
-    // Get latest messages from websocket
-    const latestMessages = wsClient.messages;
-    if (latestMessages.length === 0) return;
-
-    // Only process if we have a current chat
-    if (currentChat) {
-      // Update current chat with the latest messages
-      currentChat = {
-        ...currentChat,
-        content: latestMessages
-      };
-
-      // Update chats list with the updated chat
-      chats = deduplicateChats(currentChat, chats);
-
-      // Update UI status based on latest messages
-      updateCurrentChatStatus();
-
-      // Update waiting message display
-      skipWaitingAnimation = true;
-      showWaitingMessage = isAwaitingResponse;
-
-      // Scroll to bottom when new messages arrive
-      scrollChatToBottom();
-    }
-  }
+  //TODO: auto scroll rune
 
   function updateUrlWithSession(sessionUuid: string | null, inProfilePage: boolean = false) {
     const url = new URL(window.location.href);
@@ -189,12 +217,6 @@
   async function handleMessageSubmit(event: CustomEvent<string>) {
     const messageContent = event.detail;
 
-    // First check current chat status
-    updateCurrentChatStatus();
-
-    // Don't allow sending if already waiting for a response in the current chat
-    if (isAwaitingResponse) return;
-
     // Hide any existing waiting message without animation
     if (showWaitingMessage) {
       skipWaitingAnimation = true;
@@ -202,51 +224,55 @@
     }
 
     // Set status to awaiting response immediately for this chat
-    isAwaitingResponse = true;
+    // isAwaitingResponse = true; //todo: probably dont need?
 
-    // Scroll to bottom immediately when sending a message
-    scrollChatToBottom();
+    // queueScrollChatToBottom();
 
-    try {
-      console.log("We have the user id", user);
-      const result = currentChat == null ?
-        (await apiClient.submitSubmitPost(messageContent, user!.uuid, false)).data :
-        (await apiClient.submitSubmitPost(messageContent, user!.uuid, false, currentChat.uuid)).data;
-
-      currentChat = result;
-      // Use deduplication helper to update chats list
-      chats = deduplicateChats(result, chats);
-
-      // Check if last message needs a response and update UI accordingly
-      updateCurrentChatStatus();
-
-      // Scroll to bottom when new messages arrive
-      scrollChatToBottom();
-
-      // Update URL with new session UUID, preserving profile state
-      if (result.uuid) {
-        updateUrlWithSession(result.uuid, showProfilePage);
-
-        // Initialize or reinitialize websocket connection for this chat
-        if (wsClient) {
-          wsClient.disconnect();
-        }
-
-        wsClient = createWebSocketClient(result.uuid, user!.uuid);
-        wsClient.connect();
-      }
-
-      // Show the waiting message after 1.5 seconds with animation
-      setTimeout(() => {
-        skipWaitingAnimation = false; // Reset to ensure animation plays when showing
-        showWaitingMessage = true;
-        scrollChatToBottom(); // Scroll to bottom when popup appears
-      }, 1500);
-    } catch (error) {
-      console.error('Error submitting message:', error);
-    } finally {
-      //do not put code here
+    console.log("We have the user id", user);
+    if(currentSession == null) { //make new session
+      currentSession = (await apiClient.createSessionCreateSessionPost(messageContent, user!.uuid)).data
+      wsClient = new WebSocketClient(messages, currentSession.uuid);
+      wsClient.connect()
     }
+
+    const msg: Message = {
+      user_id: user.uuid,
+      name: user.display_name,
+      pfp_url: user.pfp_url,
+      content: messageContent,
+      is_answer: false //todo make this more flexible?
+    }
+
+    wsClient!.send(msg) //send message
+
+    // // Check message status upon loading a chat
+    // updateCurrentChatStatus();
+    // setTimeout(() => {
+    //   skipWaitingAnimation = false; // Reset to ensure animation plays when showing
+    //   showWaitingMessage = isAwaitingResponse;
+    //   queueScrollChatToBottom(); // Scroll to bottom when popup appears
+    // }, 500);
+    //
+    // // Use deduplication helper to update chats list
+    // chats = deduplicateChats(currentChat, chats);
+
+    // Check if last message needs a response and update UI accordingly
+    // updateCurrentChatStatus();
+
+    // Scroll to bottom when new messages arrive
+    queueScrollChatToBottom();
+
+    // Update URL with new session UUID, preserving profile state
+    if (currentSession.uuid) {
+      updateUrlWithSession(currentSession.uuid, showProfilePage);
+    }
+
+    // Show the waiting message after 1.5 seconds with animation
+    setTimeout(() => {
+      skipWaitingAnimation = false; // Reset to ensure animation plays when showing
+      showWaitingMessage = true;
+      queueScrollChatToBottom(); // Scroll to bottom when popup appears
+    }, 1500);
   }
 
   function closeWaitingMessage() {
@@ -280,12 +306,12 @@
 
   // Check status for current chat and update UI state
   function updateCurrentChatStatus() {
-    if (!currentChat) {
+    if (!currentSession) {
       isAwaitingResponse = false;
       return;
     }
 
-    const status = checkChatStatus(currentChat);
+    const status = checkChatStatus(currentSession);
     isAwaitingResponse = status.isAwaitingResponse;
     if(!isAwaitingResponse) didCloseAwaiting = false
 
@@ -293,7 +319,7 @@
   }
 
   // Helper function to force scroll to bottom
-  function scrollChatToBottom() {
+  function queueScrollChatToBottom() {
     // Use setTimeout to ensure it runs after DOM updates
     setTimeout(() => {
       const messagesContainer = document.querySelector('.messages-container');
@@ -315,23 +341,23 @@
     }
 
     // Update URL to reflect profile page state
-    updateUrlWithSession(currentChat?.uuid || null, true);
+    updateUrlWithSession(currentSession?.uuid || null, true);
   }
 
   function navigateToChat() {
     showProfilePage = false;
 
     // Reconnect websocket if we have a chat
-    if (currentChat && currentChat.uuid && user.uuid) {
+    if (currentSession && currentSession.uuid && user.uuid) {
       if (wsClient) {
         wsClient.disconnect();
       }
-      wsClient = createWebSocketClient(currentChat.uuid, user.uuid);
+      wsClient = new WebSocketClient(messages, currentSession.uuid, user.uuid);
       wsClient.connect();
     }
 
     // Update URL to reflect chat page state
-    updateUrlWithSession(currentChat?.uuid || null, false);
+    updateUrlWithSession(currentSession?.uuid || null, false);
   }
 
   function toggleSidebar() {
@@ -351,7 +377,7 @@
 
     <Sidebar
             {chats}
-            {currentChat}
+            {currentSession}
             {isSidebarOpen}
             on:newchat={newChatSplashScreen}
             on:select={selectChat}
@@ -361,14 +387,14 @@
     <div class="overlay" class:active={isSidebarOpen} on:click={toggleSidebar}></div>
 
     <main class="chat-main">
-      {#if currentChat}
+      {#if currentSession}
         <ChatHeader
-          title={currentChat.title || ""}
+          title={currentSession.title || ""}
           {user}
           on:profileClick={navigateToProfile}
         />
         <MessageList
-          messages={currentChat.content || []}
+          messages={$messages}
           showWaitingMessage={showWaitingMessage && !didCloseAwaiting}
           skipWaitingAnimation={skipWaitingAnimation}
           user={user}

@@ -1,4 +1,5 @@
 import random
+from datetime import datetime, timezone
 from typing import Optional
 from uuid import uuid4
 
@@ -6,6 +7,7 @@ from fastapi import HTTPException
 
 from settings import get_mongodb_connection
 from data import Session, Message, UserSecret, UserPublic
+from sockets import socket_manager
 
 def mongo_sessions():
     return get_mongodb_connection()["sessions"]
@@ -30,7 +32,7 @@ async def append_to_session(session_id: str, message: Message):
     session = get_or_create_session(session_id, title=message.content, user_id=message.user_id)
     user = get_user(message.user_id)
     session.content.append(Message(name=user.display_name, pfp_url=user.pfp_url, content=message.content, is_answer=message.is_answer, user_id=message.user_id))  # append new content
-    session.updated_timestamp = datetime.now()
+    session.updated_timestamp = datetime.now(timezone.utc)
     write_session(session)
     # now broadcast
     await socket_manager.update_session(session_id, message)
@@ -67,9 +69,12 @@ def create_temp_user() -> UserPublic:
     return user.to_pub()
 
 def get_user(uuid: str) -> UserPublic:
+    print("Trying to get user with uuid", uuid)
     try:
         collection = mongo_users()
         user = collection.find_one({"_id" : uuid})
+        print("Got user", user)
+        print("About to validate")
         return UserSecret.model_validate(user).to_pub()
     except KeyError:
         raise HTTPException(status_code=404, detail=f"User with ID '{uuid}' not found")
