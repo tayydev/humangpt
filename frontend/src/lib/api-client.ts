@@ -12,88 +12,65 @@ const config = new Configuration({
   basePath: API_BASE_PATH
 });
 
-//claude garbage:
-export class WSClient {
-  private ws: WebSocket | null = null;
-  private msgListeners: ((msg: Message) => void)[] = [];
-  private connListeners: ((status: boolean) => void)[] = [];
-  private connected = false;
-  private reconnTimer: number | null = null;
-
-  constructor(private sessionId: string, private clientId: string) {}
-
-  connect(baseUrl = window.location.origin.replace('http', 'ws')): void {
-    if (this.ws) this.ws.close();
-    if (this.reconnTimer) clearTimeout(this.reconnTimer);
-
-    const url = `${baseUrl}/ws/session?session_id=${this.sessionId}&client_id=${this.clientId}`;
-    this.ws = new WebSocket(url);
-
-    this.ws.onopen = () => {
-      this.connected = true;
-      this.notifyConn(true);
+// WebSocket client using Svelte runes
+export function createWebSocketClient(sessionId: string, clientId: string) {
+  let ws: WebSocket | null = null;
+  let connected = false;
+  let reconnTimer: number | null = null;
+  let messages: Message[] = [];
+  
+  // This will need to be called from a component with $effect
+  function connect(baseUrl = window.location.origin.replace('http', 'ws')) {
+    if (ws) ws.close();
+    if (reconnTimer) clearTimeout(reconnTimer);
+    
+    const url = `${baseUrl}/ws/session?session_id=${sessionId}&client_id=${clientId}`;
+    ws = new WebSocket(url);
+    
+    ws.onopen = () => {
+      connected = true;
     };
-
-    this.ws.onmessage = (e) => {
+    
+    ws.onmessage = (e) => {
       try {
-        this.notifyMsg(JSON.parse(e.data));
+        const msg = JSON.parse(e.data);
+        messages = [...messages, msg];
       } catch (err) {
         console.error('WS parse error:', err);
       }
     };
-
-    this.ws.onclose = () => {
-      this.connected = false;
-      this.notifyConn(false);
-      this.reconnTimer = window.setTimeout(() => this.connect(baseUrl), 3000);
+    
+    ws.onclose = () => {
+      connected = false;
+      reconnTimer = window.setTimeout(() => connect(baseUrl), 3000);
     };
-
-    this.ws.onerror = () => this.ws?.close();
+    
+    ws.onerror = () => ws?.close();
   }
-
-  disconnect(): void {
-    if (this.reconnTimer) clearTimeout(this.reconnTimer);
-    if (this.ws) {
-      this.ws.close();
-      this.ws = null;
+  
+  function disconnect() {
+    if (reconnTimer) clearTimeout(reconnTimer);
+    if (ws) {
+      ws.close();
+      ws = null;
     }
   }
-
-  send(msg: Message): void {
-    if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
+  
+  function send(msg: Message) {
+    if (!ws || ws.readyState !== WebSocket.OPEN) {
       console.error('Cannot send: WS not connected');
       return;
     }
-    this.ws.send(JSON.stringify(msg));
+    ws.send(JSON.stringify(msg));
   }
-
-  onMessage(cb: (msg: Message) => void): () => void {
-    this.msgListeners.push(cb);
-    return () => {
-      this.msgListeners = this.msgListeners.filter(l => l !== cb);
-    };
-  }
-
-  onConnection(cb: (status: boolean) => void): () => void {
-    this.connListeners.push(cb);
-    cb(this.connected);
-    return () => {
-      this.connListeners = this.connListeners.filter(l => l !== cb);
-    };
-  }
-
-  isConnected(): boolean {
-    return this.connected;
-  }
-
-  private notifyMsg(msg: Message): void {
-    this.msgListeners.forEach(cb => cb(msg));
-  }
-
-  private notifyConn(status: boolean): void {
-    this.connListeners.forEach(cb => cb(status));
-  }
+  
+  return {
+    get connected() { return connected; },
+    get messages() { return messages; },
+    connect,
+    disconnect,
+    send
+  };
 }
-
 
 export const apiClient = new DefaultApi(config);
