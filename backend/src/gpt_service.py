@@ -4,16 +4,15 @@ from uuid import uuid4
 
 from fastapi import HTTPException
 
-from sockets import *
-from settings import *
-from data import *
+from settings import get_mongodb_connection
+from data import Session, Message, UserSecret, UserPublic
 
 def mongo_sessions():
     return get_mongodb_connection()["sessions"]
 
 def get_sessions_list():
     raw_sessions = list(mongo_sessions().find())
-    return [e for e in [Session.model_validate(session) for session in raw_sessions] if len(e.content) > 0]
+    return [Session.model_validate(session) for session in raw_sessions]
 
 def get_session(uuid: str) -> Session:
     collection = mongo_sessions()
@@ -45,6 +44,7 @@ def write_session(session: Session) -> Session:
         {"$set" : session_data},
         upsert=True  # updates session if it exists
     )
+    result = mongo_sessions().find()
     return session
 
 def mongo_users():
