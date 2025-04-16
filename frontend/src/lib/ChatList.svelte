@@ -2,9 +2,10 @@
   import type { Session } from './types';
   import ChatItem from './ChatItem.svelte';
   import { createEventDispatcher } from 'svelte';
+  import type {SessionDTO} from "humangpt-client";
 
   export let chats: Session[];
-  export let currentChat: Session | null;
+  export let currentSession: SessionDTO | null;
 
   const dispatch = createEventDispatcher();
 
@@ -15,8 +16,8 @@
   // Sort function to order chats by creation date, newest first
   $: sortedChats = [...chats].sort((a, b) => {
     // Try to use created_timestamp first
-    if (a.updated_timestamp && b.updated_timestamp) {
-      return new Date(b.updated_timestamp).getTime() - new Date(a.updated_timestamp).getTime();
+    if (a.created_at && b.created_at) {
+      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
     }
 
     // If no timestamps available, keep original order
@@ -28,7 +29,7 @@
   {#each sortedChats as chat}
     <ChatItem
       {chat}
-      isActive={currentChat && currentChat.uuid === chat.uuid}
+      isActive={(currentSession && currentSession.uuid === chat.uuid) ?? false}
       on:click={() => selectChat(chat)}
     />
   {/each}

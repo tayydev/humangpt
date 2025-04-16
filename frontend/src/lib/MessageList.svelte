@@ -41,6 +41,8 @@
   function handleCloseWaitingMessage() {
     dispatch('closeWaiting');
   }
+
+  console.log("MESSAGE LIST DRAW", messages)
 </script>
 
 <div class="messages-container" bind:this={messagesContainer}>
